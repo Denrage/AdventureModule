@@ -1,0 +1,18 @@
+{
+  "name": "Adventure Module",
+  "version": "0.1.2",
+  "namespace": "Denrage.AdventureModule",
+  "package": "Denrage.AdventureModule.dll",
+  "manifest_version": 1,
+
+  "description": "Allows to track any achievement with multiple windows and information from the official wiki.",
+  "dependencies": {
+    "bh.blishhud": ">=0.5.2"
+  },
+  "url": "https://github.com/Denrage/AchievementTrackerModule",
+  "contributors": [
+    {
+      "name": "Denrage"
+    }
+  ]
+}

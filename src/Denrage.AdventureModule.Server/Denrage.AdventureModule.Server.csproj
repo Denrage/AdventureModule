@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net6.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf" Version="*" />
+		<PackageReference Include="Grpc" Version="*" />
+		<PackageReference Include="Grpc.Tools" Version="*">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<ProjectReference Include="..\Denrage.AdventureModule.Libs\Denrage.AdventureModule.Libs.csproj" />
+	  <Protobuf Include="..\protos\whiteboard.proto" Link="whiteboard.proto" />
+	</ItemGroup>
+	
+</Project>

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcWhiteboard";
+
+package whiteboard;
+
+service Whiteboard {
+  rpc AddLines (stream WhiteboardLineAddMessage) returns (stream WhiteboardLineAddMessage);
+  rpc RemoveLines (stream WhiteboardLineRemoveMessage) returns (stream WhiteboardLineRemoveMessage);
+}
+
+message WhiteboardLineAddMessage {
+    message Color {
+        int32 r = 1;
+        int32 g = 2;
+        int32 b = 3;
+        int32 a = 4;
+    }
+
+    message Vector2 {
+        int32 x = 1;
+        int32 y = 2;
+    }
+
+    Vector2 start = 1;
+    Vector2 end = 2;
+    Color lineColor = 3;
+}
+
+message WhiteboardLineRemoveMessage {
+    int32 hashCode = 1;
+}
