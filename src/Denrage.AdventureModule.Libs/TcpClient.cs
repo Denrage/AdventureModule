@@ -12,28 +12,57 @@ namespace Denrage.AdventureModule.Libs
     {
         private const string EndOfMessageToken = "✷";
         private readonly NetworkStream networkStream;
-        
+
+        private bool isConnected = false;
+
+        public bool IsConnected => this.isConnected && this.Client.Connected;
+
         public System.Net.Sockets.TcpClient Client { get; }
 
         public event Action<byte[]> DataReceived;
+
+        public event Action Disconnected;
 
         public TcpClient(System.Net.Sockets.TcpClient client, CancellationToken ct)
         {
             this.Client = client;
             this.networkStream = this.Client.GetStream();
+            this.isConnected = true;
             _ = Task.Run(async () => await this.Receive(ct), ct);
         }
 
         public async Task Write(string data, CancellationToken ct)
         {
-            data += EndOfMessageToken;
-            
-            if (this.Client.Connected)
+            try
             {
-                using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(data)))
+                data += EndOfMessageToken;
+
+                if (this.Client.Connected)
                 {
-                    await memoryStream.CopyToAsync(this.networkStream, 81920, ct);
+                    using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(data)))
+                    {
+                        await memoryStream.CopyToAsync(this.networkStream, 81920, ct);
+                    }
                 }
+            }
+            catch (SocketException)
+            {
+                this.Disconnect();
+            }
+        }
+
+        public void Disconnect()
+        {
+            if (isConnected)
+            {
+                if (this.Client.Connected)
+                {
+                    this.Client.Close();
+                    this.Client.Dispose();
+                }
+
+                this.isConnected = false;
+                this.Disconnected?.Invoke();
             }
         }
 
@@ -68,6 +97,7 @@ namespace Denrage.AdventureModule.Libs
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message.ToString());
+                this.Disconnect();
             }
 
             Console.WriteLine($"Client {this.Client.Client.RemoteEndPoint?.ToString()} disconnected");

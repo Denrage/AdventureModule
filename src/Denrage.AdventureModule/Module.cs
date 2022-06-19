@@ -16,7 +16,7 @@ namespace Denrage.AdventureModule
     public class Module : Blish_HUD.Modules.Module
     {
 
-        private static readonly Logger Logger = Logger.GetLogger<Module>();
+        public static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly WhiteboardService whiteboardService;
         private readonly TcpService tcpService;
 
@@ -53,6 +53,23 @@ namespace Denrage.AdventureModule
             var window = new CanvasWindow()
             {
                 Parent = GraphicsService.Graphics.SpriteScreen,
+            };
+            this.tcpService.Connected += () => Logger.Info("Connected");
+            this.tcpService.Disconnected += async () =>
+            {
+                Logger.Info("Disconnected");
+
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    Logger.Info("Trying to reconnect");
+                    await this.tcpService.Initialize();
+                    if (this.tcpService.IsConnected)
+                    {
+                        Logger.Info("Reconnected");
+                        return;
+                    }
+                }
             };
             await this.tcpService.Initialize();
             window.Initialize(this.whiteboardService, this.tcpService);

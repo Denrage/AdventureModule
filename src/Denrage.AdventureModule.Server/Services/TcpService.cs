@@ -21,6 +21,7 @@ public class TcpService : IDisposable
         this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
         {
             { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
+            { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
         };
     }
 
