@@ -12,15 +12,18 @@ public class TcpService : IDisposable
 
     public List<Guid> Clients => this.server.Clients;
 
-    public TcpService(WhiteboardService whiteboardService)
+    public event Action<Guid> ClientConnected;
+
+    public TcpService(Func<WhiteboardService> getWhiteboardService)
     {
         this.cancellationTokenSource = new CancellationTokenSource();
         this.server = new TcpServer();
         this.server.DataReceived += this.DataReceived;
+        this.server.ClientConnected += id => this.ClientConnected?.Invoke(id);
 
         this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
         {
-            { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
+            { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(getWhiteboardService)) },
             { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
         };
     }

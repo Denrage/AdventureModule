@@ -6,24 +6,20 @@ namespace Denrage.AdventureModule.Server.Services;
 
 public class WhiteboardService
 {
-    private readonly Func<TcpService> getTcpService;
     private readonly ConcurrentDictionary<Guid, ConcurrentBag<Line>> lines = new();
 
     private TcpService tcpService;
 
-    public WhiteboardService(Func<TcpService> getTcpService)
+    public WhiteboardService(TcpService tcpService)
     {
-        this.getTcpService = getTcpService;
-    }
-
-    private TcpService GetTcpService()
-    {
-        if (tcpService == null)
+        this.tcpService = tcpService;
+        this.tcpService.ClientConnected += id =>
         {
-            tcpService = getTcpService();
-        }
-
-        return tcpService;
+            _ = this.tcpService.SendMessage(id, new WhiteboardAddLineMessage()
+            {
+                Lines = this.lines.Values.SelectMany(x => x).ToList(),
+            }, default);
+        };
     }
 
     public async Task AddLines(Guid clientId, IEnumerable<Line> lines, CancellationToken ct)
@@ -41,19 +37,19 @@ public class WhiteboardService
 
         Console.WriteLine("Lines received: " + string.Join(";", lines.Select(x => $"X:{x.Start.X},Y:{x.Start.Y}")));
         Console.WriteLine("Total Lines from client: " + clientLines.Count);
-        var message = this.GetTcpService().CreateMessage(new WhiteboardAddLineMessage()
+        var message = this.tcpService.CreateMessage(new WhiteboardAddLineMessage()
         {
             Lines = lines.ToList(),
         });
 
-        foreach (var item in this.GetTcpService().Clients)
+        foreach (var item in this.tcpService.Clients)
         {
             if (item == clientId)
             {
                 continue;
             }
 
-            await this.GetTcpService().SendMessage(item, message, ct);
+            await this.tcpService.SendMessage(item, message, ct);
         }
 
     }

@@ -14,6 +14,8 @@ public class TcpServer
 
     public event Action<Guid, byte[]> DataReceived;
 
+    public event Action<Guid> ClientConnected;
+
     public TcpServer()
     {
         this.listener = new TcpListener(System.Net.IPAddress.Any, 5837);
@@ -25,16 +27,16 @@ public class TcpServer
         this.listener.Start();
         while (true)
         {
-            //await Task.Delay(TimeSpan.FromMilliseconds(100));
-
             var client = await listener.AcceptTcpClientAsync();
             var internalClient = new TcpClientContext(new Libs.TcpClient(client, ct));
             internalClient.DataReceived += this.DataReceived;
             if (!clients.TryAdd(internalClient.Id, internalClient))
             {
                 client.Dispose();
+                continue;
             }
             Console.WriteLine("Client connected: " + client.Client.RemoteEndPoint?.ToString() ?? string.Empty);
+            this.ClientConnected?.Invoke(internalClient.Id);
         }
     }
 
