@@ -9,16 +9,16 @@ namespace Denrage.AdventureModule.MessageHandlers
 {
     public class WhiteboardAddLineMessageHandler : MessageHandler<WhiteboardAddLineMessage>
     {
-        private readonly WhiteboardService whiteboardService;
+        private readonly Func<WhiteboardService> getWhiteboardService;
 
-        public WhiteboardAddLineMessageHandler(WhiteboardService whiteboardService)
+        public WhiteboardAddLineMessageHandler(Func<WhiteboardService> getWhiteboardService)
         {
-            this.whiteboardService = whiteboardService;
+            this.getWhiteboardService = getWhiteboardService;
         }
 
         protected override async Task Handle(Guid clientId, WhiteboardAddLineMessage message, CancellationToken ct)
         {
-            this.whiteboardService.AddLines(message.Lines);
+            this.getWhiteboardService().AddServerLines(message.Lines);
             await Task.CompletedTask;
         }
     }

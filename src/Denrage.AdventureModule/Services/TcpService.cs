@@ -25,7 +25,7 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Connected;
 
-        public TcpService(WhiteboardService whiteboardService)
+        public TcpService(Func<WhiteboardService> whiteboardService)
         {
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {

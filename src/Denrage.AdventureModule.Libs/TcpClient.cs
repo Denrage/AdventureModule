@@ -88,7 +88,6 @@ namespace Denrage.AdventureModule.Libs
                         {
                             bytesRead = await this.networkStream.ReadAsync(buffer, 0, buffer.Length, ct);
                             await memoryStream.WriteAsync(buffer, 0, bytesRead, ct);
-                            _ = memoryStream.Seek(0, SeekOrigin.Begin);
                             await this.HandleMessages(messageToken, memoryStream, ct);
                         }
                     }

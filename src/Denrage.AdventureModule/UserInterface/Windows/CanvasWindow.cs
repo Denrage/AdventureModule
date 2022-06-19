@@ -16,12 +16,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 {
     public class CanvasWindow : WindowBase2
     {
-        private readonly ConcurrentBag<Line> lines = new ConcurrentBag<Line>();
-        private readonly List<Line> diffLines = new List<Line>();
-        private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private bool leftMouseDown = false;
+        private Line currentLine = default;
+        private WhiteboardService whiteboardService;
 
-        public void Initialize(WhiteboardService whiteboardService, TcpService tcpService)
+        public void Initialize(WhiteboardService whiteboardService)
         {
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 0, 500, 500 - 30));
             //this.ClipsBounds = true;
@@ -32,37 +31,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 currentLine = default;
             };
             this.whiteboardService = whiteboardService;
-            this.tcpService = tcpService;
-
-            Task.Run(async () => await this.LineTask());
         }
-
-        private async Task LineTask()
-        {
-            while (true)
-            {
-                this.cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                await Task.Delay(10, this.cancellationTokenSource.Token);
-                var linesToSend = new List<Line>();
-                lock (this.diffLines)
-                {
-                    linesToSend = this.diffLines.ToList();
-                    this.diffLines.Clear();
-                }
-
-                if (linesToSend.Any())
-                {
-                    await this.tcpService.Send(new WhiteboardAddLineMessage()
-                    {
-                        Lines = linesToSend,
-                    }, this.cancellationTokenSource.Token);
-                }
-            }
-        }
-
-        private Line currentLine = default;
-        private WhiteboardService whiteboardService;
-        private TcpService tcpService;
 
         public override void UpdateContainer(GameTime gameTime)
         {
@@ -92,11 +61,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                         X = mouseX - this.AbsoluteBounds.X,
                         Y = mouseY - this.AbsoluteBounds.Y,
                     };
-                    this.lines.Add(currentLine);
-                    lock (this.diffLines)
-                    {
-                        diffLines.Add(currentLine);
-                    }
+                    
+                    this.whiteboardService.AddUserLine(currentLine);
+
                     currentLine = new Line()
                     {
                         LineColor = new Line.Color()
@@ -119,7 +86,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public override void PaintBeforeChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            foreach (var line in this.lines.Concat(this.whiteboardService.Lines))
+            foreach (var line in this.whiteboardService.UserLines.Concat(this.whiteboardService.ServerLines))
             {
                 var startRectangle = new Rectangle(line.Start.X, line.Start.Y, 1, 1);
                 startRectangle = startRectangle.ToBounds(this.AbsoluteBounds);
@@ -127,12 +94,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 endRectangle = endRectangle.ToBounds(this.AbsoluteBounds);
                 spriteBatch.DrawLine(new Vector2(startRectangle.X, startRectangle.Y), new Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), 5);
             }
-        }
-
-        protected override void DisposeControl()
-        {
-            this.cancellationTokenSource.Cancel();
-            base.DisposeControl();
         }
     }
 }
