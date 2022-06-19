@@ -113,6 +113,8 @@ namespace Denrage.AdventureModule
 
         private async Task ReadTask(NetworkStream networkStream)
         {
+            const string EndOfMessageToken = "✷";
+            var messageToken = System.Text.Encoding.UTF8.GetBytes(EndOfMessageToken);
             while (client.Connected)
             {
                 if (client.Available == 0)
@@ -128,15 +130,60 @@ namespace Denrage.AdventureModule
                     {
                         bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
                         await memoryStream.WriteAsync(buffer, 0, bytesRead);
-                        if (bytesRead < buffer.Length)
-                        {
-                            break;
-                        }
-                    }
+                        _ = memoryStream.Seek(0, SeekOrigin.Begin);
 
-                    _ = memoryStream.Seek(0, SeekOrigin.Begin);
-                    var data = memoryStream.ToArray();
-                    _ = Task.Run(async () => await this.Handle(data));
+                        var messageTokenPosition = -1;
+                        do
+                        {
+                            messageTokenPosition = -1;
+                            var tempData = memoryStream.ToArray();
+                            for (int i = 0; i < tempData.Length; i++)
+                            {
+                                if (tempData[i] == messageToken[0] && tempData.Length - i >= messageToken.Length)
+                                {
+                                    var setToken = true;
+                                    for (int j = 0; j < messageToken.Length; j++)
+                                    {
+                                        if (tempData[i + j] != messageToken[j])
+                                        {
+                                            setToken = false;
+                                        }
+                                    }
+
+                                    if (setToken)
+                                    {
+                                        messageTokenPosition = i;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (messageTokenPosition != -1)
+                            {
+                                _ = memoryStream.Seek(0, SeekOrigin.Begin);
+                                var data = new byte[messageTokenPosition];
+                                _ = await memoryStream.ReadAsync(data, 0, data.Length);
+
+                                _ = memoryStream.Seek(0, SeekOrigin.Begin);
+                                var indexNextMessage = memoryStream.Length - (messageTokenPosition + messageToken.Length);
+                                if (indexNextMessage != 0)
+                                {
+                                    var remainingData = new byte[memoryStream.Length - indexNextMessage];
+                                    _ = memoryStream.Seek(messageTokenPosition + messageToken.Length, SeekOrigin.Begin);
+                                    _ = await memoryStream.ReadAsync(remainingData, 0, remainingData.Length);
+                                    _ = memoryStream.Seek(0, SeekOrigin.Begin);
+                                    memoryStream.SetLength(0);
+                                    await memoryStream.WriteAsync(remainingData, 0, remainingData.Length);
+                                }
+                                else
+                                {
+                                    memoryStream.SetLength(0);
+                                }
+
+                                _ = Task.Run(() => this.Handle(data));
+                            }
+                        } while (messageTokenPosition != -1);
+                    }
                 }
             }
         }
@@ -152,15 +199,19 @@ namespace Denrage.AdventureModule
         public async Task Send<T>(T message)
             where T : Message
         {
+            const string EndOfMessageToken = "✷";
             var tcpMessage = new TcpMessage();
 
             tcpMessage.TypeIdentifier = typeof(T).Name;
             tcpMessage.Data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message));
-            var data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(tcpMessage));
+            
+            var data = System.Text.Json.JsonSerializer.Serialize(tcpMessage);
+
+            data = data + EndOfMessageToken;
 
             if (this.client.Connected)
             {
-                using (var memoryStream = new MemoryStream(data))
+                using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(data)))
                 {
                     await memoryStream.CopyToAsync(this.stream);
                 }
@@ -238,7 +289,7 @@ namespace Denrage.AdventureModule
         {
             while (true)
             {
-                await Task.Delay(200);
+                await Task.Delay(10);
                 var linesToSend = new List<Line>();
                 lock (this.diffLines)
                 {
