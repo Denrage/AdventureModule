@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Denrage.AdventureModule.Libs.Messages.Data;
+using System.Collections.Generic;
 
 namespace Denrage.AdventureModule.Libs.Messages
 {

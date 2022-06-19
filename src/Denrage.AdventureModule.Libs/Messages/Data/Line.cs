@@ -1,4 +1,4 @@
-﻿namespace Denrage.AdventureModule.Libs.Messages
+﻿namespace Denrage.AdventureModule.Libs.Messages.Data
 {
     public struct Line
     {
