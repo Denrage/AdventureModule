@@ -19,7 +19,8 @@ namespace Denrage.AdventureModule
         public static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly WhiteboardService whiteboardService;
         private readonly TcpService tcpService;
-        
+        private readonly LoginService loginService;
+
         internal static Module Instance { get; private set; }
 
         #region Service Managers
@@ -34,7 +35,8 @@ namespace Denrage.AdventureModule
         {
             Instance = this;
             this.tcpService = new TcpService(() => this.whiteboardService);
-            this.whiteboardService = new WhiteboardService(this.tcpService);
+            this.loginService = new LoginService(this.tcpService);
+            this.whiteboardService = new WhiteboardService(this.tcpService, this.loginService);
         }
 
         protected override void DefineSettings(SettingCollection settings)

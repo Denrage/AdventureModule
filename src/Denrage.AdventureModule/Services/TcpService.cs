@@ -32,6 +32,7 @@ namespace Denrage.AdventureModule.Services
             {
                 { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
+                { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
             };
         }
 

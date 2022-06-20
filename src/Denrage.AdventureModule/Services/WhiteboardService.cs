@@ -13,15 +13,17 @@ namespace Denrage.AdventureModule.Services
         private readonly List<Line> diffLines = new List<Line>();
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly TcpService tcpService;
+        private readonly LoginService loginService;
 
         public ConcurrentBag<Line> ServerLines { get; private set; } = new ConcurrentBag<Line>();
 
         public ConcurrentBag<Line> UserLines { get; } = new ConcurrentBag<Line>();
 
-        public WhiteboardService(TcpService tcpService)
+        public WhiteboardService(TcpService tcpService, LoginService loginService)
         {
             this.tcpService = tcpService;
-            this.tcpService.Connected += this.Initialize;
+            this.loginService = loginService;
+            this.loginService.LoggedIn += this.Initialize;
             this.tcpService.Disconnected += () => this.ServerLines = new ConcurrentBag<Line>();
         }
 

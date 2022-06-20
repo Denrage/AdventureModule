@@ -10,8 +10,9 @@ namespace MyApp // Note: actual namespace depends on the project name.
         {
             TcpService service = null;
             WhiteboardService whiteboardService = null;
-            service = new TcpService(() => whiteboardService);
-            whiteboardService = new WhiteboardService(service, new UserManagementService());
+            var userManagementService = new UserManagementService();
+            service = new TcpService(() => whiteboardService, userManagementService);
+            whiteboardService = new WhiteboardService(service, userManagementService);
             service.Initialize().Wait();
 
             Console.WriteLine("Server started");

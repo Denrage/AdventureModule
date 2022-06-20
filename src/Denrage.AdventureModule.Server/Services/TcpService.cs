@@ -14,7 +14,7 @@ public class TcpService : IDisposable
 
     public event Action<Guid> ClientConnected;
 
-    public TcpService(Func<WhiteboardService> getWhiteboardService)
+    public TcpService(Func<WhiteboardService> getWhiteboardService, UserManagementService userManagementService)
     {
         this.cancellationTokenSource = new CancellationTokenSource();
         this.server = new TcpServer();
@@ -25,6 +25,7 @@ public class TcpService : IDisposable
         {
             { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(getWhiteboardService)) },
             { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
+            { typeof(LoginMessage).Name, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
         };
     }
 

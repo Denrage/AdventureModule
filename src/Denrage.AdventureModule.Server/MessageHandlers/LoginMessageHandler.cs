@@ -11,10 +11,12 @@ namespace Denrage.AdventureModule.Server.MessageHandlers;
 internal class LoginMessageHandler : MessageHandler<LoginMessage>
 {
     private readonly UserManagementService userManagementService;
+    private readonly TcpService tcpService;
 
-    public LoginMessageHandler(UserManagementService userManagementService)
+    public LoginMessageHandler(UserManagementService userManagementService, TcpService tcpService)
     {
         this.userManagementService = userManagementService;
+        this.tcpService = tcpService;
     }
 
     protected override async Task Handle(Guid clientId, LoginMessage message, CancellationToken ct)
@@ -29,6 +31,6 @@ internal class LoginMessageHandler : MessageHandler<LoginMessage>
             this.userManagementService.AddUser(clientId, message.Name);
         }
 
-        await Task.CompletedTask;
+        await this.tcpService.SendMessage(clientId, new LoginResponseMessage() { Id = message.Id, Success = true }, ct);
     }
 }
