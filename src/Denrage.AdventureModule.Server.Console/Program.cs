@@ -11,7 +11,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
             TcpService service = null;
             WhiteboardService whiteboardService = null;
             service = new TcpService(() => whiteboardService);
-            whiteboardService = new WhiteboardService(service);
+            whiteboardService = new WhiteboardService(service, new UserManagementService());
             service.Initialize().Wait();
 
             Console.WriteLine("Server started");

@@ -6,27 +6,32 @@ namespace Denrage.AdventureModule.Server.Services;
 
 public class WhiteboardService
 {
-    private readonly ConcurrentDictionary<Guid, ConcurrentBag<Line>> lines = new();
+    private readonly ConcurrentDictionary<string, ConcurrentBag<Line>> lines = new();
 
     private TcpService tcpService;
+    private readonly UserManagementService userManagementService;
 
-    public WhiteboardService(TcpService tcpService)
+    public WhiteboardService(TcpService tcpService, UserManagementService userManagementService)
     {
         this.tcpService = tcpService;
-        this.tcpService.ClientConnected += id =>
+        this.userManagementService = userManagementService;
+        this.userManagementService.LoggedIn += id =>
         {
+            var user = this.userManagementService.GetUserFromConnectionId(id);
             _ = this.tcpService.SendMessage(id, new WhiteboardAddLineMessage()
             {
-                Lines = this.lines.Values.SelectMany(x => x).ToList(),
+                Lines = this.lines.Where(x => x.Key != user.Name).Select(x => x.Value).SelectMany(x => x).ToList(),
             }, default);
         };
     }
 
     public async Task AddLines(Guid clientId, IEnumerable<Line> lines, CancellationToken ct)
     {
-        if (!this.lines.TryGetValue(clientId, out var clientLines))
+        var user = this.userManagementService.GetUserFromConnectionId(clientId);
+        if (!this.lines.TryGetValue(user.Name, out var clientLines))
         {
-            clientLines = this.lines.AddOrUpdate(clientId, new ConcurrentBag<Line>(), (_, value) => value);
+            var lineCollection = new ConcurrentBag<Line>();
+            clientLines = this.lines.AddOrUpdate(user.Name, lineCollection, (_, value) => lineCollection);
         }
 
         foreach (var item in lines)
