@@ -43,7 +43,7 @@ public class TcpServer
     public async Task SendData(Guid id, string data, CancellationToken ct)
     {
         var client = this.clients[id];
-        await client.Client.Write(data, ct);
+        await client.Client.Send(data, ct);
     }
 
     private class TcpClientContext

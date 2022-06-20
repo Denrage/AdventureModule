@@ -3,6 +3,7 @@ using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Libs.Messages.Handler;
 using Denrage.AdventureModule.MessageHandlers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
@@ -14,8 +15,8 @@ namespace Denrage.AdventureModule.Services
     {
         private Libs.TcpClient client;
         private readonly Dictionary<string, (Type Type, MessageHandler Handler)> messageTypes;
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<object>> responseTasks = new ConcurrentDictionary<Guid, TaskCompletionSource<object>>();
         private CancellationTokenSource cancellationTokenSource;
-        private TaskCompletionSource<bool> heartBeatCompletionSource;
         private bool isConnected = false;
 
 
@@ -30,7 +31,7 @@ namespace Denrage.AdventureModule.Services
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
                 { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
-                { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
+                { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
             };
         }
 
@@ -58,13 +59,19 @@ namespace Denrage.AdventureModule.Services
         {
             var json = System.Text.Encoding.UTF8.GetString(data);
             var tcpMessage = System.Text.Json.JsonSerializer.Deserialize<TcpMessage>(json);
-            var message = System.Text.Json.JsonSerializer.Deserialize(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type);
-            await this.messageTypes[tcpMessage.TypeIdentifier].Handler.Handle(default, message, this.cancellationTokenSource.Token);
-        }
+            var message = (Message)System.Text.Json.JsonSerializer.Deserialize(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type);
+            if (message is ResponseMessage)
+            {
+                if (this.responseTasks.TryRemove(message.Id, out var completionSource))
+                {
+                    completionSource.SetResult(message);
+                }
 
-        public void HeartbeatReceived()
-        {
-            this.heartBeatCompletionSource.SetResult(true);
+                // If no one waits for this, just ignore it
+                return;
+            }
+
+            await this.messageTypes[tcpMessage.TypeIdentifier].Handler.Handle(default, message, this.cancellationTokenSource.Token);
         }
 
         private async Task Heartbeat(CancellationToken ct)
@@ -72,9 +79,12 @@ namespace Denrage.AdventureModule.Services
             while (true)
             {
                 await Task.Delay(5000, ct);
-                this.heartBeatCompletionSource = new TaskCompletionSource<bool>();
-                await this.Send(new PingMessage(), ct);
-                if(!this.heartBeatCompletionSource.Task.Wait((int)TimeSpan.FromSeconds(5).TotalMilliseconds, ct))
+                var loopCancellationToken = new CancellationTokenSource();
+                var combinedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(ct, loopCancellationToken.Token);
+                var sendTask = this.SendAndAwaitAnswer<PingMessage, PingResponseMessage>(new PingMessage(), combinedCancellationToken.Token);
+                var taskResult = await Task.WhenAny(sendTask, Task.Delay(TimeSpan.FromSeconds(20), combinedCancellationToken.Token));
+                combinedCancellationToken.Cancel();
+                if (taskResult != sendTask)
                 {
                     this.cancellationTokenSource.Cancel();
                     this.client.Disconnect();
@@ -93,14 +103,37 @@ namespace Denrage.AdventureModule.Services
                 return;
             }
 
-            var tcpMessage = new TcpMessage();
+            if (message.Id == default)
+            {
+                message.Id = Guid.NewGuid();
+            }
 
-            tcpMessage.TypeIdentifier = typeof(T).Name;
-            tcpMessage.Data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message));
+            var tcpMessage = new TcpMessage
+            {
+                TypeIdentifier = typeof(T).Name,
+                Data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message))
+            };
 
             var data = System.Text.Json.JsonSerializer.Serialize(tcpMessage);
 
-            await this.client.Write(data, ct);
+            await this.client.Send(data, ct);
+        }
+
+        public async Task<TResponse> SendAndAwaitAnswer<TRequest, TResponse>(TRequest request, CancellationToken ct)
+            where TRequest : Message
+            where TResponse : Message
+        {
+            var completionSource = new TaskCompletionSource<object>();
+
+            request.Id = Guid.NewGuid();
+            if (!this.responseTasks.TryAdd(request.Id, completionSource))
+            {
+                throw new InvalidOperationException("This should never happen");
+            }
+
+            await this.Send(request, ct);
+
+            return (TResponse)await completionSource.Task;
         }
     }
 }

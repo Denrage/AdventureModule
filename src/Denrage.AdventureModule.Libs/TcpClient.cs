@@ -31,7 +31,7 @@ namespace Denrage.AdventureModule.Libs
             _ = Task.Run(async () => await this.Receive(ct), ct);
         }
 
-        public async Task Write(string data, CancellationToken ct)
+        public async Task Send(string data, CancellationToken ct)
         {
             try
             {
