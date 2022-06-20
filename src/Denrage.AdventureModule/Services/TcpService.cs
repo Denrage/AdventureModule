@@ -117,7 +117,7 @@ namespace Denrage.AdventureModule.Services
 
             var data = System.Text.Json.JsonSerializer.Serialize(tcpMessage);
 
-            await this.client.Send(data, ct);
+            await this.client.Send(System.Text.Encoding.UTF8.GetBytes(data), ct);
         }
 
         public async Task<TResponse> SendAndAwaitAnswer<TRequest, TResponse>(TRequest request, CancellationToken ct)

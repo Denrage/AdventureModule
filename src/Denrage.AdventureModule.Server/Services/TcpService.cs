@@ -41,7 +41,7 @@ public class TcpService : IDisposable
     public async Task SendMessage(Guid clientId, TcpMessage tcpMessage, CancellationToken ct)
     {
         var data = System.Text.Json.JsonSerializer.Serialize(tcpMessage);
-        await this.server.SendData(clientId, data, ct);
+        await this.server.SendData(clientId, System.Text.Encoding.UTF8.GetBytes(data), ct);
     }
 
     public TcpMessage CreateMessage<T>(T message)

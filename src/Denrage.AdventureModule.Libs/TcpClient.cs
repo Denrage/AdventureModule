@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -10,7 +11,6 @@ namespace Denrage.AdventureModule.Libs
 {
     public class TcpClient
     {
-        private const string EndOfMessageToken = "✷";
         private readonly NetworkStream networkStream;
 
         private bool isConnected = false;
@@ -31,15 +31,15 @@ namespace Denrage.AdventureModule.Libs
             _ = Task.Run(async () => await this.Receive(ct), ct);
         }
 
-        public async Task Send(string data, CancellationToken ct)
+        public async Task Send(byte[] data, CancellationToken ct)
         {
             try
             {
-                data += EndOfMessageToken;
+                
 
                 if (this.Client.Connected)
                 {
-                    using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(data)))
+                    using (var memoryStream = new MemoryStream(BitConverter.GetBytes(data.Length).Concat(data).ToArray()))
                     {
                         await memoryStream.CopyToAsync(this.networkStream, 81920, ct);
                     }
@@ -68,7 +68,6 @@ namespace Denrage.AdventureModule.Libs
 
         private async Task Receive(CancellationToken ct)
         {
-            var messageToken = System.Text.Encoding.UTF8.GetBytes(EndOfMessageToken);
             Console.WriteLine($"Start Receive Task for {this.Client.Client.RemoteEndPoint?.ToString()}");
             try
             {
@@ -88,7 +87,12 @@ namespace Denrage.AdventureModule.Libs
                         {
                             bytesRead = await this.networkStream.ReadAsync(buffer, 0, buffer.Length, ct);
                             await memoryStream.WriteAsync(buffer, 0, bytesRead, ct);
-                            await this.HandleMessages(messageToken, memoryStream, ct);
+                            var messages = await this.ExtractMessages(memoryStream);
+
+                            foreach (var message in messages)
+                            {
+                                _ = Task.Run(() => this.DataReceived?.Invoke(message));
+                            }
                         }
                     }
                 }
@@ -102,67 +106,53 @@ namespace Denrage.AdventureModule.Libs
             Console.WriteLine($"Client {this.Client.Client.RemoteEndPoint?.ToString()} disconnected");
         }
 
-        private async Task HandleMessages(byte[] messageToken, MemoryStream memoryStream, CancellationToken ct)
+        private async Task<IEnumerable<byte[]>> ExtractMessages(MemoryStream memoryStream)
         {
-            var messageTokenPosition = -1;
-            do
+            var messages = new List<byte[]>();
+            while (true)
             {
-                ct.ThrowIfCancellationRequested();
-                var tempData = memoryStream.ToArray();
-                messageTokenPosition = GetMessageTokenPosition(messageToken, tempData);
-
-                if (messageTokenPosition != -1)
+                if (memoryStream.Length == 0)
                 {
-                    _ = memoryStream.Seek(0, SeekOrigin.Begin);
-                    var data = new byte[messageTokenPosition];
-                    _ = await memoryStream.ReadAsync(data, 0, data.Length, ct);
-
-                    _ = memoryStream.Seek(0, SeekOrigin.Begin);
-                    var indexNextMessage = memoryStream.Length - (messageTokenPosition + messageToken.Length);
-                    if (indexNextMessage != 0)
-                    {
-                        var remainingData = new byte[memoryStream.Length - indexNextMessage];
-                        _ = memoryStream.Seek(messageTokenPosition + messageToken.Length, SeekOrigin.Begin);
-                        _ = await memoryStream.ReadAsync(remainingData, 0, remainingData.Length, ct);
-                        _ = memoryStream.Seek(0, SeekOrigin.Begin);
-                        memoryStream.SetLength(0);
-                        await memoryStream.WriteAsync(remainingData, 0, remainingData.Length, ct);
-                    }
-                    else
-                    {
-                        memoryStream.SetLength(0);
-                    }
-
-                    _ = Task.Run(() => this.DataReceived?.Invoke(data));
+                    // Exit loop when no data is left in memory stream
+                    break;
                 }
-            } while (messageTokenPosition != -1);
-        }
 
-        private static int GetMessageTokenPosition(byte[] messageToken, byte[] tempData)
-        {
-            var messageTokenPosition = -1;
-            for (int i = 0; i < tempData.Length; i++)
-            {
-                if (tempData[i] == messageToken[0] && tempData.Length - i >= messageToken.Length)
+                _ = memoryStream.Seek(0, SeekOrigin.Begin);
+                var lengthArray = new byte[sizeof(int)];
+                var readBytes = await memoryStream.ReadAsync(lengthArray, 0, lengthArray.Length);
+
+                if (readBytes != lengthArray.Length)
                 {
-                    var setToken = true;
-                    for (int j = 0; j < messageToken.Length; j++)
-                    {
-                        if (tempData[i + j] != messageToken[j])
-                        {
-                            setToken = false;
-                        }
-                    }
-
-                    if (setToken)
-                    {
-                        messageTokenPosition = i;
-                        break;
-                    }
+                    throw new InvalidOperationException("Invalid data in stream!");
                 }
+
+                var messageLength = BitConverter.ToInt32(lengthArray, 0);
+                if (memoryStream.Length - memoryStream.Position >= messageLength)
+                {
+                    var message = new byte[messageLength];
+                    _ = await memoryStream.ReadAsync(message, 0, messageLength);
+                    messages.Add(message);
+                }
+                else
+                {
+                    // Exit loop on incomplete message and wait for next buffer input
+                    _ = memoryStream.Seek(0, SeekOrigin.End);
+                    break;
+                }
+
+                var remainingDataLength = (int)memoryStream.Length - (int)memoryStream.Position;
+
+                if (remainingDataLength > 0)
+                {
+                    var memoryStreamBuffer = memoryStream.GetBuffer();
+                    Buffer.BlockCopy(memoryStreamBuffer, (int)memoryStream.Position, memoryStreamBuffer, 0, remainingDataLength);
+                }
+
+                _ = memoryStream.Seek(0, SeekOrigin.Begin);
+                memoryStream.SetLength(remainingDataLength);
             }
 
-            return messageTokenPosition;
+            return messages;
         }
     }
 }
