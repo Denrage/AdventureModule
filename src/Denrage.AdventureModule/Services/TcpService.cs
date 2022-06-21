@@ -31,6 +31,7 @@ namespace Denrage.AdventureModule.Services
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
                 { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
+                { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(whiteboardService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
             };

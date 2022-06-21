@@ -6,7 +6,7 @@ namespace Denrage.AdventureModule.Server.Services;
 
 public class WhiteboardService
 {
-    private readonly ConcurrentDictionary<string, ConcurrentBag<Line>> lines = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, Line>> lines = new();
 
     private TcpService tcpService;
     private readonly UserManagementService userManagementService;
@@ -20,7 +20,7 @@ public class WhiteboardService
             var user = this.userManagementService.GetUserFromConnectionId(id);
             _ = this.tcpService.SendMessage(id, new WhiteboardAddLineMessage()
             {
-                Lines = this.lines.Where(x => x.Key != user.Name).Select(x => x.Value).SelectMany(x => x).ToList(),
+                Lines = this.lines.Where(x => x.Key != user.Name).Select(x => x.Value.Values).SelectMany(x => x).ToList(),
             }, default);
         };
     }
@@ -30,13 +30,13 @@ public class WhiteboardService
         var user = this.userManagementService.GetUserFromConnectionId(clientId);
         if (!this.lines.TryGetValue(user.Name, out var clientLines))
         {
-            var lineCollection = new ConcurrentBag<Line>();
+            var lineCollection = new ConcurrentDictionary<Guid, Line>();
             clientLines = this.lines.AddOrUpdate(user.Name, lineCollection, (_, value) => lineCollection);
         }
 
         foreach (var item in lines)
         {
-            clientLines.Add(item);
+            clientLines.TryAdd(item.Id, item);
 
         }
 
@@ -56,6 +56,34 @@ public class WhiteboardService
 
             await this.tcpService.SendMessage(item, message, ct);
         }
+    }
 
+    public async Task RemoveLines(Guid clientId, List<Guid> lines, CancellationToken ct)
+    {
+        var user = this.userManagementService.GetUserFromConnectionId(clientId);
+        if (!this.lines.TryGetValue(user.Name, out var clientLines))
+        {
+            return;
+        }
+
+        foreach (var line in lines)
+        {
+            clientLines.TryRemove(line, out _);
+        }
+
+        var message = this.tcpService.CreateMessage(new WhiteboardRemoveLineMessage()
+        {
+            Ids = lines,
+        });
+
+        foreach (var item in this.tcpService.Clients)
+        {
+            if (item == clientId)
+            {
+                continue;
+            }
+
+            await this.tcpService.SendMessage(item, message, ct);
+        }
     }
 }

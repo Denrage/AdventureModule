@@ -1,4 +1,6 @@
-﻿namespace Denrage.AdventureModule.Libs.Messages.Data
+﻿using System;
+
+namespace Denrage.AdventureModule.Libs.Messages.Data
 {
     public struct Line
     {
@@ -20,9 +22,13 @@
             public int Y { get; set; }
         }
 
+        public Guid Id { get; set; }
+
         public Point Start { get; set; }
 
         public Point End { get; set; }
+
+        public DateTime TimeStamp { get; set; }
 
         public Color LineColor { get; set; }
     }
