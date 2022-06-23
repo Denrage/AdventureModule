@@ -42,20 +42,14 @@ public class WhiteboardService
 
         Console.WriteLine("Lines received: " + string.Join(";", lines.Select(x => $"X:{x.Start.X},Y:{x.Start.Y}")));
         Console.WriteLine("Total Lines from client: " + clientLines.Count);
-        var message = this.tcpService.CreateMessage(new WhiteboardAddLineMessage()
-        {
-            Lines = lines.ToList(),
-        });
 
-        foreach (var item in this.tcpService.Clients)
-        {
-            if (item == clientId)
+        await this.tcpService.SendToGroup(
+            clientId, 
+            new WhiteboardAddLineMessage()
             {
-                continue;
-            }
-
-            await this.tcpService.SendMessage(item, message, ct);
-        }
+                Lines = lines.ToList(),
+            }, 
+            ct);
     }
 
     public async Task RemoveLines(Guid clientId, List<Guid> lines, CancellationToken ct)
@@ -71,19 +65,13 @@ public class WhiteboardService
             clientLines.TryRemove(line, out _);
         }
 
-        var message = this.tcpService.CreateMessage(new WhiteboardRemoveLineMessage()
-        {
-            Ids = lines,
-        });
-
-        foreach (var item in this.tcpService.Clients)
-        {
-            if (item == clientId)
+        await this.tcpService.SendToGroup(
+            clientId,
+            new WhiteboardRemoveLineMessage()
             {
-                continue;
-            }
+                Ids = lines,
+            }, 
+            ct);
 
-            await this.tcpService.SendMessage(item, message, ct);
-        }
     }
 }

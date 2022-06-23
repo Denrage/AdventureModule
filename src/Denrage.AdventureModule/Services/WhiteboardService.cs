@@ -50,6 +50,17 @@ namespace Denrage.AdventureModule.Services
             }
         }
 
+        public void AddUserLines(IEnumerable<Line> lines)
+        {
+            if (this.UserLines.Count == 0)
+            {
+                foreach (var item in lines)
+                {
+                    this.UserLines.TryAdd(item.Id, item);
+                }
+            }
+        }
+
         public void AddUserLine(Line line)
         {
             this.UserLines.TryAdd(line.Id, line);

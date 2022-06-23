@@ -22,6 +22,9 @@ public class UserManagementService
     public User? GetUserFromConnectionId(Guid id) 
         => this.users.TryGetValue(id, out var user) ? user : null;
 
+    public Guid GetConnectionIdFromUser(User user) 
+        => this.users.FirstOrDefault(x => x.Value == user).Key;
+
     public void AddUser(Guid id, string name)
     {
         var user = new User() { Name = name };
