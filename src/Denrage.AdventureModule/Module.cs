@@ -52,10 +52,6 @@ namespace Denrage.AdventureModule
         protected override async Task LoadAsync()
         {
             //GameService.Graphics.World.AddEntity(new TestEntity());
-            var window = new CanvasWindow()
-            {
-                Parent = GraphicsService.Graphics.SpriteScreen,
-            };
             this.tcpService.Connected += () => Logger.Info("Connected");
             this.tcpService.Disconnected += async () =>
             {
@@ -73,9 +69,21 @@ namespace Denrage.AdventureModule
                     }
                 }
             };
-            await this.tcpService.Initialize();
-            window.Initialize(this.whiteboardService);
-            window.Show();
+            //var window = new CanvasWindow()
+            //{
+            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //};
+            //await this.tcpService.Initialize();
+            //window.Initialize(this.whiteboardService);
+            //window.Show();
+
+            var window = new ImageWindow(this.ContentsManager)
+            {
+                Parent = GraphicsService.Graphics.SpriteScreen,
+                Width = 800,
+                Height = 600,
+                Location = new Point(400, 400),
+            };
         }
 
         protected override void OnModuleLoaded(EventArgs e)
