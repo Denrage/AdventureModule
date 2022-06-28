@@ -47,6 +47,9 @@ public class UserManagementService
 
     public Group? GetGroup(User user) 
         => this.groups.FirstOrDefault(x => x.Users.Contains(user));
+
+    public IEnumerable<Group> Groups
+        => this.groups.ToArray();
 }
 
 public class User

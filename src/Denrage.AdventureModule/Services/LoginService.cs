@@ -12,9 +12,10 @@ namespace Denrage.AdventureModule.Services
     {
         private readonly TcpService tcpService;
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private readonly string name = Guid.NewGuid().ToString();
 
         public event Action LoggedIn;
+
+        public string Name { get; } = Guid.NewGuid().ToString();
 
         public LoginService(TcpService tcpService)
         {
@@ -26,7 +27,7 @@ namespace Denrage.AdventureModule.Services
 
         public async void Login()
         {
-            var result = await this.tcpService.SendAndAwaitAnswer<LoginMessage, LoginResponseMessage>(new LoginMessage() { Name = name }, this.cancellationTokenSource.Token);
+            var result = await this.tcpService.SendAndAwaitAnswer<LoginMessage, LoginResponseMessage>(new LoginMessage() { Name = this.Name }, this.cancellationTokenSource.Token);
 
             if (result.Success)
             {

@@ -26,12 +26,13 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Connected;
 
-        public TcpService(Func<WhiteboardService> whiteboardService)
+        public TcpService(Func<WhiteboardService> whiteboardService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
         {
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
                 { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
                 { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(whiteboardService)) },
+                { typeof(PlayerPositionsMessage).Name, (typeof(PlayerPositionsMessage), new PlayerPositionsMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
             };
@@ -100,7 +101,7 @@ namespace Denrage.AdventureModule.Services
         public async Task Send<T>(T message, CancellationToken ct)
             where T : Message
         {
-            if (!this.client.IsConnected)
+            if (this.client == null || !this.client.IsConnected)
             {
                 return;
             }
