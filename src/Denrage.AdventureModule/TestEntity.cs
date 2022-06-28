@@ -24,7 +24,7 @@ namespace Denrage.AdventureModule
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
             var location = MumbleUtils.ContinentToMapScreen(this.Position);
-
+            location = new Vector2(location.X - 20, location.Y - 10);
             //spriteBatch.DrawRectangle(new RectangleF(new Vector2(500, 500), new Size2(40, 20)), Color.DarkOrange, 4f);
             spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);
         }
@@ -70,8 +70,8 @@ namespace Denrage.AdventureModule
                         ? (float)GameService.Gw2Mumble.UI.CompassRotation
                         : 0);
 
-                var screenBounds = MumbleUtils.GetMapBounds();  // <-- The static method I linked above
-                var scale = (float)(GameService.Gw2Mumble.UI.MapScale * 0.897);  // Blish HUD scale workaround
+                var screenBounds = MumbleUtils.GetMapBounds();
+                var scale = (float)(GameService.Gw2Mumble.UI.MapScale * 0.897);  // Magic number to transform scale
                 var boundsCenter = screenBounds.Location.ToVector2() + screenBounds.Size.ToVector2() / 2f;
 
                 return Vector2.Transform((continentCoords - mapCenter) / scale, mapRotation) + boundsCenter;

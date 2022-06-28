@@ -5,7 +5,7 @@ namespace Denrage.AdventureModule.Server.Services;
 
 public class PlayerMumbleService
 {
-    private System.Collections.Concurrent.ConcurrentDictionary<string, Vector3> playerPositions = new System.Collections.Concurrent.ConcurrentDictionary<string, Vector3>();
+    private System.Collections.Concurrent.ConcurrentDictionary<string, PlayerPosition> playerPositions = new System.Collections.Concurrent.ConcurrentDictionary<string, PlayerPosition>();
     private readonly TcpService tcpService;
     private readonly UserManagementService userManagementService;
 
@@ -16,7 +16,7 @@ public class PlayerMumbleService
         _ = Task.Run(async () => this.Run());
     }
 
-    public void UpdatePosition(string name, Vector3 position)
+    public void UpdatePosition(string name, PlayerPosition position)
     {
         _ = this.playerPositions.AddOrUpdate(name, position, (id, oldPosition) => position);
     }
@@ -29,7 +29,7 @@ public class PlayerMumbleService
 
             foreach (var group in this.userManagementService.Groups)
             {
-                var groupPositions = new Dictionary<string, Vector3>();
+                var groupPositions = new Dictionary<string, PlayerPosition>();
 
                 foreach (var user in group.Users)
                 {

@@ -27,7 +27,15 @@ namespace Denrage.AdventureModule.MessageHandlers
                     continue;
                 }
 
-                _ = this.playerMumbleService().OtherPlayerPositions.AddOrUpdate(item.Key, new Microsoft.Xna.Framework.Vector3(item.Value.X, item.Value.Y, item.Value.Z), (name, oldValue) => new Microsoft.Xna.Framework.Vector3(item.Value.X, item.Value.Y, item.Value.Z));
+                if (item.Value.MapPosition is null || item.Value.Position is null)
+                {
+                    continue;
+                }
+
+                var mapPosition = new Microsoft.Xna.Framework.Vector2(item.Value.MapPosition.X, item.Value.MapPosition.Y);
+                var position = new Microsoft.Xna.Framework.Vector3(item.Value.Position.X, item.Value.Position.Y, item.Value.Position.Z);
+
+                _ = this.playerMumbleService().OtherPlayerPositions.AddOrUpdate(item.Key, (mapPosition, position), (name, oldValue) => (mapPosition, position));
             }
 
             await Task.CompletedTask;

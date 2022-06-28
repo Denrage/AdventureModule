@@ -17,7 +17,7 @@ namespace Denrage.AdventureModule.Services
         private readonly TcpService tcpService;
         private Vector3 lastPosition = new Vector3();
 
-        public ConcurrentDictionary<string, Vector3> OtherPlayerPositions { get; } = new ConcurrentDictionary<string, Vector3>();
+        public ConcurrentDictionary<string, (Vector2 MapPosition, Vector3 Position)> OtherPlayerPositions { get; } = new ConcurrentDictionary<string, (Vector2 MapPosition, Vector3 Position)>();
 
         public PlayerMumbleService(TcpService tcpService)
         {
@@ -32,17 +32,25 @@ namespace Denrage.AdventureModule.Services
                 ct.ThrowIfCancellationRequested();
                 await Task.Delay(TimeSpan.FromMilliseconds(50), ct);
                 var currentPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
-
                 if (currentPosition != lastPosition)
                 {
+                    var mapPosition = GameService.Gw2Mumble.UI.MapPosition;
                     await this.tcpService.Send(new PlayerPositionMessage()
                     {
-                        Position = new Libs.Messages.Data.Vector3()
+                        Position = new Libs.Messages.Data.PlayerPosition()
                         {
-                            X = currentPosition.X,
-                            Y = currentPosition.Y,
-                            Z = currentPosition.Z,
-                        }
+                            Position = new Libs.Messages.Data.Vector3()
+                            {
+                                X = currentPosition.X,
+                                Y = currentPosition.Y,
+                                Z = currentPosition.Z,
+                            },
+                            MapPosition = new Libs.Messages.Data.Vector2()
+                            {
+                                X = (float)mapPosition.X,
+                                Y = (float)mapPosition.Y,
+                            },
+                        },
                     }, ct);
                 }
 

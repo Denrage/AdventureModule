@@ -22,7 +22,7 @@ namespace Denrage.AdventureModule
         private readonly TcpService tcpService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
-        private readonly Dictionary<string, PlayerMarker> playerMarkers = new Dictionary<string, PlayerMarker>();
+        private readonly Dictionary<string, (MapMarker MapMarker, PlayerMarker PlayerMarker)> playerMarkers = new Dictionary<string, (MapMarker, PlayerMarker)>();
         private MapMarker mapMarker;
 
         internal static Module Instance { get; private set; }
@@ -79,7 +79,6 @@ namespace Denrage.AdventureModule
             this.mapMarker = new MapMarker()
             {
                 Parent = GameService.Graphics.SpriteScreen,
-                Position = new Vector2(55356.234375f, 34260.75f),
             };
 
             //var window = new CanvasWindow()
@@ -111,13 +110,16 @@ namespace Denrage.AdventureModule
             {
                 if (!this.playerMarkers.TryGetValue(player.Key, out var marker))
                 {
-                    marker = new PlayerMarker();
-                    GameService.Graphics.World.AddEntity(marker);
+                    marker = (new MapMarker() { Parent = GameService.Graphics.SpriteScreen }, new PlayerMarker());
+                    GameService.Graphics.World.AddEntity(marker.PlayerMarker);
                     this.playerMarkers[player.Key] = marker;
                 }
 
-                marker.Position = player.Value;
+                marker.PlayerMarker.Position = player.Value.Position;
+                marker.MapMarker.Position = player.Value.MapPosition;
             }
+
+            this.mapMarker.Position = new Vector2((float)GameService.Gw2Mumble.UI.MapPosition.X, (float)GameService.Gw2Mumble.UI.MapPosition.Y);
         }
 
         /// <inheritdoc />

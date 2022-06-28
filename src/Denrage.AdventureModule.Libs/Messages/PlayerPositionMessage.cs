@@ -7,6 +7,6 @@ namespace Denrage.AdventureModule.Libs.Messages
 {
     public class PlayerPositionMessage : Message
     {
-        public Vector3 Position { get; set; }
+        public PlayerPosition Position { get; set; }
     }
 }
