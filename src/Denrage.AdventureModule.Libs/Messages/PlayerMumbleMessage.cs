@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Denrage.AdventureModule.Libs.Messages
 {
-    public class PlayerPositionMessage : Message
+    public class PlayerMumbleMessage : Message
     {
-        public PlayerPosition Position { get; set; }
+        public MumbleInformation Information { get; set; }
     }
 }

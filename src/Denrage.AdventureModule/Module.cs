@@ -106,7 +106,7 @@ namespace Denrage.AdventureModule
 
         protected override void Update(GameTime gameTime)
         {
-            foreach (var player in this.playerMumbleService.OtherPlayerPositions)
+            foreach (var player in this.playerMumbleService.OtherPlayerInformation)
             {
                 if (!this.playerMarkers.TryGetValue(player.Key, out var marker))
                 {
@@ -115,8 +115,8 @@ namespace Denrage.AdventureModule
                     this.playerMarkers[player.Key] = marker;
                 }
 
-                marker.PlayerMarker.Position = player.Value.Position;
-                marker.MapMarker.Position = player.Value.MapPosition;
+                marker.PlayerMarker.Position = player.Value.MapPosition.ToVector();
+                marker.MapMarker.Position = player.Value.ContinentPosition.ToVector();
             }
 
             this.mapMarker.Position = new Vector2((float)GameService.Gw2Mumble.UI.MapPosition.X, (float)GameService.Gw2Mumble.UI.MapPosition.Y);

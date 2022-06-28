@@ -5,7 +5,7 @@ namespace Denrage.AdventureModule.Server.Services;
 
 public class PlayerMumbleService
 {
-    private System.Collections.Concurrent.ConcurrentDictionary<string, PlayerPosition> playerPositions = new System.Collections.Concurrent.ConcurrentDictionary<string, PlayerPosition>();
+    private System.Collections.Concurrent.ConcurrentDictionary<string, MumbleInformation> playerInformation = new System.Collections.Concurrent.ConcurrentDictionary<string, MumbleInformation>();
     private readonly TcpService tcpService;
     private readonly UserManagementService userManagementService;
 
@@ -16,9 +16,9 @@ public class PlayerMumbleService
         _ = Task.Run(async () => this.Run());
     }
 
-    public void UpdatePosition(string name, PlayerPosition position)
+    public void UpdateInformation(string name, MumbleInformation information)
     {
-        _ = this.playerPositions.AddOrUpdate(name, position, (id, oldPosition) => position);
+        _ = this.playerInformation.AddOrUpdate(name, information, (id, oldPosition) => information);
     }
 
     public async Task Run()
@@ -29,19 +29,19 @@ public class PlayerMumbleService
 
             foreach (var group in this.userManagementService.Groups)
             {
-                var groupPositions = new Dictionary<string, PlayerPosition>();
+                var groupInformation = new Dictionary<string, MumbleInformation>();
 
                 foreach (var user in group.Users)
                 {
-                    if (this.playerPositions.TryGetValue(user.Name, out var position))
+                    if (this.playerInformation.TryGetValue(user.Name, out var information))
                     {
-                        groupPositions.Add(user.Name, position);
+                        groupInformation.Add(user.Name, information);
                     }
                 }
 
-                var positionMessage = new PlayerPositionsMessage()
+                var positionMessage = new PlayersMumbleMessage()
                 {
-                    Positions = groupPositions,
+                    Information = groupInformation,
                 };
 
                 await this.tcpService.SendToGroup(group, positionMessage, default);

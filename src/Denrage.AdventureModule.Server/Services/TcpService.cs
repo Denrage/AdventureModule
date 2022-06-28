@@ -26,7 +26,7 @@ public class TcpService : IDisposable
         {
             { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(getWhiteboardService)) },
             { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(getWhiteboardService)) },
-            { typeof(PlayerPositionMessage).Name, (typeof(PlayerPositionMessage), new PlayerPositionMessageHandler(playerMumbleService, userManagementService)) },
+            { typeof(PlayerMumbleMessage).Name, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
             { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
             { typeof(LoginMessage).Name, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
         };

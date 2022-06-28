@@ -1,5 +1,7 @@
 ﻿using Blish_HUD;
 using Denrage.AdventureModule.Libs.Messages;
+using Denrage.AdventureModule.Libs.Messages.Data;
+using Gw2Sharp.Models;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Concurrent;
@@ -15,9 +17,9 @@ namespace Denrage.AdventureModule.Services
     {
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         private readonly TcpService tcpService;
-        private Vector3 lastPosition = new Vector3();
+        private MumbleInformation lastInformation;
 
-        public ConcurrentDictionary<string, (Vector2 MapPosition, Vector3 Position)> OtherPlayerPositions { get; } = new ConcurrentDictionary<string, (Vector2 MapPosition, Vector3 Position)>();
+        public ConcurrentDictionary<string, MumbleInformation> OtherPlayerInformation { get; } = new ConcurrentDictionary<string, MumbleInformation>();
 
         public PlayerMumbleService(TcpService tcpService)
         {
@@ -31,31 +33,85 @@ namespace Denrage.AdventureModule.Services
             {
                 ct.ThrowIfCancellationRequested();
                 await Task.Delay(TimeSpan.FromMilliseconds(50), ct);
-                var currentPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
-                if (currentPosition != lastPosition)
+
+                if (!this.lastInformation.Equal(GameService.Gw2Mumble))
                 {
-                    var mapPosition = GameService.Gw2Mumble.UI.MapPosition;
-                    await this.tcpService.Send(new PlayerPositionMessage()
+                    var information = GameService.Gw2Mumble.ToInformation();
+                    this.lastInformation = information;
+                    await this.tcpService.Send(new PlayerMumbleMessage()
                     {
-                        Position = new Libs.Messages.Data.PlayerPosition()
-                        {
-                            Position = new Libs.Messages.Data.Vector3()
-                            {
-                                X = currentPosition.X,
-                                Y = currentPosition.Y,
-                                Z = currentPosition.Z,
-                            },
-                            MapPosition = new Libs.Messages.Data.Vector2()
-                            {
-                                X = (float)mapPosition.X,
-                                Y = (float)mapPosition.Y,
-                            },
-                        },
+                        Information = information,
                     }, ct);
                 }
-
-                this.lastPosition = currentPosition;
             }
         }
+    }
+
+    public static class MumbleExtensions
+    {
+        public static bool Equal(this Libs.Messages.Data.Vector3 messageVector, Microsoft.Xna.Framework.Vector3 xnaVector)
+            => messageVector.X == xnaVector.X && messageVector.Y == xnaVector.Y && messageVector.Z == xnaVector.Z;
+
+        public static bool Equal(this Libs.Messages.Data.Vector2 messageVector, Microsoft.Xna.Framework.Vector2 xnaVector)
+            => messageVector.X == xnaVector.X && messageVector.Y == xnaVector.Y;
+
+        public static bool Equal(this Libs.Messages.Data.Vector2 messageVector, Coordinates2 coordinates)
+            => messageVector.X == coordinates.X && messageVector.Y == coordinates.Y;
+
+        public static bool Equal(this Libs.Messages.Data.MumbleInformation mumbleInformation, Gw2MumbleService mumbleService)
+            => mumbleInformation != null && mumbleInformation.CameraPosition.Equal(mumbleService.PlayerCamera.Position) &&
+                mumbleInformation.MapPosition.Equal(mumbleService.PlayerCharacter.Position) &&
+                mumbleInformation.ContinentPosition.Equal(mumbleService.UI.MapPosition) &&
+                mumbleInformation.MapId == mumbleService.CurrentMap.Id &&
+                mumbleInformation.CameraDirection.Equal(mumbleService.PlayerCamera.Forward) &&
+                mumbleInformation.CharacterName == mumbleService.PlayerCharacter.Name;
+
+        public static Libs.Messages.Data.Vector2 ToMessageVector(this Microsoft.Xna.Framework.Vector2 vector)
+            => new Libs.Messages.Data.Vector2()
+            {
+                X = vector.X,
+                Y = vector.Y,
+            };
+
+        public static Libs.Messages.Data.Vector2 ToMessageVector(this Coordinates2 coordinates)
+            => new Libs.Messages.Data.Vector2()
+            {
+                X = (float)coordinates.X,
+                Y = (float)coordinates.Y,
+            };
+
+        public static Libs.Messages.Data.Vector3 ToMessageVector(this Microsoft.Xna.Framework.Vector3 vector)
+            => new Libs.Messages.Data.Vector3()
+            {
+                X = vector.X,
+                Y = vector.Y,
+                Z = vector.Z,
+            };
+
+        public static Microsoft.Xna.Framework.Vector2 ToVector(this Libs.Messages.Data.Vector2 vector)
+            => new Microsoft.Xna.Framework.Vector2()
+            {
+                X = vector.X,
+                Y = vector.Y,
+            };
+
+        public static Microsoft.Xna.Framework.Vector3 ToVector(this Libs.Messages.Data.Vector3 vector)
+            => new Microsoft.Xna.Framework.Vector3()
+            {
+                X = vector.X,
+                Y = vector.Y,
+                Z = vector.Z,
+            };
+
+        public static MumbleInformation ToInformation(this Gw2MumbleService service)
+            => new MumbleInformation
+            {
+                CameraDirection = service.PlayerCamera.Forward.ToMessageVector(),
+                CharacterName = service.PlayerCharacter.Name,
+                CameraPosition = service.PlayerCamera.Position.ToMessageVector(),
+                ContinentPosition = service.UI.MapPosition.ToMessageVector(),
+                MapId = service.CurrentMap.Id,
+                MapPosition = service.PlayerCharacter.Position.ToMessageVector(),
+            };
     }
 }

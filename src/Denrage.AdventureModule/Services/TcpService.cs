@@ -32,7 +32,7 @@ namespace Denrage.AdventureModule.Services
             {
                 { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
                 { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(whiteboardService)) },
-                { typeof(PlayerPositionsMessage).Name, (typeof(PlayerPositionsMessage), new PlayerPositionsMessageHandler(loginService, playerMumbleService)) },
+                { typeof(PlayersMumbleMessage).Name, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
             };
