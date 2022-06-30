@@ -4,10 +4,8 @@ using System.Text;
 
 namespace Denrage.AdventureModule.Libs.Messages.Data
 {
-    public class MapMarker
+    public class MapMarker : DrawObject
     {
-        public Guid Id { get; set; }
-
         public Vector2 Position { get; set; } 
     }
 }

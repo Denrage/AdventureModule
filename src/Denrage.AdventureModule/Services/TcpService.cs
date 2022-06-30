@@ -19,7 +19,6 @@ namespace Denrage.AdventureModule.Services
         private CancellationTokenSource cancellationTokenSource;
         private bool isConnected = false;
 
-
         public bool IsConnected => this.isConnected && (this.client?.IsConnected ?? false);
 
         public event Action Disconnected;
@@ -32,6 +31,8 @@ namespace Denrage.AdventureModule.Services
             {
                 { typeof(AddDrawObjectMessage<Line>).Name, (typeof(AddDrawObjectMessage<Line>), new AddDrawObjectMessageHandler<Line>(drawObjectService)) },
                 { typeof(RemoveDrawObjectMessage<Line>).Name, (typeof(RemoveDrawObjectMessage<Line>), new RemoveDrawObjectMessageHandler<Line>(drawObjectService)) },
+                { typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>).Name, (typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>), new AddDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(drawObjectService)) },
+                { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>).Name, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(drawObjectService)) },
                 { typeof(PlayersMumbleMessage).Name, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },

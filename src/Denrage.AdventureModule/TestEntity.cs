@@ -10,24 +10,28 @@ using System.Linq;
 
 namespace Denrage.AdventureModule
 {
-    public class MapMarker : Control
+    public class MapMarkerContainer : Control
     {
-        public Libs.Messages.Data.MapMarker Marker { get; set; }
-        
+        private readonly DrawObjectService drawObjectService;
+
         public Texture2D Texture { get; set; }
 
-        public MapMarker()
+        public MapMarkerContainer(DrawObjectService drawObjectService)
         {
             this.Texture = Module.Instance.ContentsManager.GetTexture("marker.png");
             this.ClipsBounds = false;
+            this.drawObjectService = drawObjectService;
         }
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var location = MumbleUtils.ContinentToMapScreen(this.Marker.Position.ToVector());
-            location = new Vector2(location.X - 20, location.Y - 10);
-            //spriteBatch.DrawRectangle(new RectangleF(new Vector2(500, 500), new Size2(40, 20)), Color.DarkOrange, 4f);
-            spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);
+            foreach (var item in this.drawObjectService.GetDrawObjects<Libs.Messages.Data.MapMarker>())
+            {
+                var location = MumbleUtils.ContinentToMapScreen(item.Position.ToVector());
+                location = new Vector2(location.X - 20, location.Y - 10);
+                spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);
+            }
+
         }
 
         public static class MumbleUtils
