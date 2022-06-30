@@ -25,7 +25,8 @@ namespace Denrage.AdventureModule
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            foreach (var item in this.drawObjectService.GetDrawObjects<Libs.Messages.Data.MapMarker>())
+            var markers = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.MapMarker>();
+            foreach (var item in markers)
             {
                 var location = MumbleUtils.ContinentToMapScreen(item.Position.ToVector());
                 location = new Vector2(location.X - 20, location.Y - 10);

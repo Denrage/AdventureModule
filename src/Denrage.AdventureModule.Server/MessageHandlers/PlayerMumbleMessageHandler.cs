@@ -20,7 +20,16 @@ public class PlayerMumbleMessageHandler : Libs.Messages.Handler.MessageHandler<L
 
     protected override Task Handle(Guid clientId, PlayerMumbleMessage message, CancellationToken ct)
     {
-        this.playerMumbleService().UpdateInformation(this.userManagementService.GetUserFromConnectionId(clientId).Name, message.Information);
+        var mumbleService = this.playerMumbleService();
+        if (message == null)
+        {
+            return Task.CompletedTask;
+        }
+        var user = this.userManagementService.GetUserFromConnectionId(clientId);
+        if (user != null)
+        {
+            mumbleService.UpdateInformation(user.Name, message.Information);
+        }
         return Task.CompletedTask;
     }
 }

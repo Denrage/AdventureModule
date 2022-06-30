@@ -21,10 +21,12 @@ namespace Denrage.AdventureModule.Services
 
         public ConcurrentDictionary<string, MumbleInformation> OtherPlayerInformation { get; } = new ConcurrentDictionary<string, MumbleInformation>();
 
-        public PlayerMumbleService(TcpService tcpService)
+        public PlayerMumbleService(TcpService tcpService, LoginService loginService)
         {
             this.tcpService = tcpService;
-            _ = Task.Run(async () => await this.Run(this.cancellationTokenSource.Token));
+
+            loginService.LoggedIn += () => 
+                _ = Task.Run(async () => await this.Run(this.cancellationTokenSource.Token));
         }
 
         private async Task Run(CancellationToken ct)

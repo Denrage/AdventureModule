@@ -18,6 +18,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
             service = new TcpService(() => drawObjectService, userManagementService, () => playerMumbleService);
             drawObjectService = new DrawObjectService(service, userManagementService);
             drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
+            drawObjectService.Register<MapMarker, AddDrawObjectMessage<MapMarker>, RemoveDrawObjectMessage<MapMarker>>(markers => new AddDrawObjectMessage<MapMarker>() { DrawObjects = markers.ToArray() }, ids => new RemoveDrawObjectMessage<MapMarker>() { Ids = ids.ToArray() });
             playerMumbleService = new PlayerMumbleService(service, userManagementService);
             service.Initialize().Wait();
 

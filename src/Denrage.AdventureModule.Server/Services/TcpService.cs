@@ -24,11 +24,13 @@ public class TcpService : IDisposable
 
         this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
         {
-            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>).Name, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
-            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>).Name, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
-            { typeof(PlayerMumbleMessage).Name, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
-            { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
-            { typeof(LoginMessage).Name, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
+            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
+            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
+            { typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>), new AddDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
+            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
+            { typeof(PlayerMumbleMessage).FullName, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
+            { typeof(PingMessage).FullName, (typeof(PingMessage), new PingMessageHandler(this)) },
+            { typeof(LoginMessage).FullName, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
         };
         this.userManagementService = userManagementService;
     }
@@ -71,7 +73,7 @@ public class TcpService : IDisposable
     public TcpMessage CreateMessage<T>(T message)
         => new()
         {
-            TypeIdentifier = message.GetType().Name,
+            TypeIdentifier = message.GetType().FullName,
             Data = Newtonsoft.Json.JsonConvert.SerializeObject(message, new Newtonsoft.Json.JsonSerializerSettings()
             {
                 TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto,

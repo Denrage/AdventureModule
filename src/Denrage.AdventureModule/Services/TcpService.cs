@@ -29,13 +29,13 @@ namespace Denrage.AdventureModule.Services
         {
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
-                { typeof(AddDrawObjectMessage<Line>).Name, (typeof(AddDrawObjectMessage<Line>), new AddDrawObjectMessageHandler<Line>(drawObjectService)) },
-                { typeof(RemoveDrawObjectMessage<Line>).Name, (typeof(RemoveDrawObjectMessage<Line>), new RemoveDrawObjectMessageHandler<Line>(drawObjectService)) },
-                { typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>).Name, (typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>), new AddDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(drawObjectService)) },
-                { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>).Name, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(drawObjectService)) },
-                { typeof(PlayersMumbleMessage).Name, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
-                { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
-                { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
+                { typeof(AddDrawObjectMessage<Line>).FullName, (typeof(AddDrawObjectMessage<Line>), new AddDrawObjectMessageHandler<Line>(drawObjectService)) },
+                { typeof(RemoveDrawObjectMessage<Line>).FullName, (typeof(RemoveDrawObjectMessage<Line>), new RemoveDrawObjectMessageHandler<Line>(drawObjectService)) },
+                { typeof(AddDrawObjectMessage<MapMarker>).FullName, (typeof(AddDrawObjectMessage<MapMarker>), new AddDrawObjectMessageHandler<MapMarker>(drawObjectService)) },
+                { typeof(RemoveDrawObjectMessage<MapMarker>).FullName, (typeof(RemoveDrawObjectMessage<MapMarker>), new RemoveDrawObjectMessageHandler<MapMarker>(drawObjectService)) },
+                { typeof(PlayersMumbleMessage).FullName, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
+                { typeof(PingResponseMessage).FullName, (typeof(PingResponseMessage), null) },
+                { typeof(LoginResponseMessage).FullName, (typeof(LoginResponseMessage), null) },
             };
         }
 
@@ -123,7 +123,7 @@ namespace Denrage.AdventureModule.Services
 
             var tcpMessage = new TcpMessage
             {
-                TypeIdentifier = message.GetType().Name,
+                TypeIdentifier = message.GetType().FullName,
                 Data = Newtonsoft.Json.JsonConvert.SerializeObject(message, jsonOptions),
             };
 

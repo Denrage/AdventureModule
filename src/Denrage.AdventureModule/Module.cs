@@ -45,8 +45,8 @@ namespace Denrage.AdventureModule
         {
             Instance = this;
             this.tcpService = new TcpService(() => this.drawObjectService, () => this.loginService, () => this.playerMumbleService);
-            this.playerMumbleService = new PlayerMumbleService(this.tcpService);
             this.loginService = new LoginService(this.tcpService);
+            this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService);
             this.drawObjectService = new DrawObjectService(this.tcpService);
             this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
             this.drawObjectService.Register<Libs.Messages.Data.MapMarker, AddDrawObjectMessage<Libs.Messages.Data.MapMarker>, RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>>(marker => new AddDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() }, ids => new RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>() { Ids = ids.ToArray() });
@@ -66,7 +66,6 @@ namespace Denrage.AdventureModule
                 return Task.CompletedTask;
             }
 
-            // TODO: Create service, make them deleteable and propagte them through the group
             if (!GameService.Gw2Mumble.UI.IsMapOpen)
             {
                 return Task.CompletedTask;
@@ -78,6 +77,7 @@ namespace Denrage.AdventureModule
             {
                 Position = this.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
                 Username = this.loginService.Name,
+                Id = Guid.NewGuid(),
             } }, false, default);
 
             return Task.CompletedTask;
