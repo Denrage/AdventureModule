@@ -5,6 +5,7 @@ using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.BitmapFonts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,7 @@ namespace Denrage.AdventureModule.UserInterface
             foreach (var item in this.playerMumbleService.OtherPlayerInformation)
             {
                 var location = MapUtils.ContinentToMapScreen(item.Value.ContinentPosition.ToVector());
+                spriteBatch.DrawString(ContentService.Content.DefaultFont14, item.Value.CharacterName, location, Color.White);
                 location = new Vector2(location.X - 20, location.Y - 10);
 
                 spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);

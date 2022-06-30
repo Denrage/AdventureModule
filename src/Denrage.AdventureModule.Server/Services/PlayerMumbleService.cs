@@ -25,7 +25,6 @@ public class PlayerMumbleService
     {
         while (true)
         {
-            return;
             await Task.Delay(TimeSpan.FromMilliseconds(100));
 
             foreach (var group in this.userManagementService.Groups)
