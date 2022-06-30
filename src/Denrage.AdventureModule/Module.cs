@@ -6,6 +6,7 @@ using Blish_HUD.Settings;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
+using Denrage.AdventureModule.UserInterface;
 using Denrage.AdventureModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -27,8 +28,6 @@ namespace Denrage.AdventureModule
         private readonly TcpService tcpService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
-        private readonly Dictionary<string, (MapMarker MapMarker, PlayerMarker PlayerMarker)> playerMarkers = new Dictionary<string, (MapMarker, PlayerMarker)>();
-        private MapMarker mapMarker;
         private SettingEntry<KeyBinding> placeMapMarkerKeybind;
 
         internal static Module Instance { get; private set; }
@@ -125,10 +124,8 @@ namespace Denrage.AdventureModule
             window.Initialize(this.drawObjectService, this.loginService);
             window.Show();
 
-            var markerContainer = new MapMarkerContainer(this.drawObjectService)
-            {
-                Parent = GameService.Graphics.SpriteScreen,
-            };
+            var markerContainer = new MapMarkerContainer(this.drawObjectService);
+            var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
 
             //var window = new ImageWindow(this.ContentsManager)
             //{
@@ -144,25 +141,6 @@ namespace Denrage.AdventureModule
 
             // Base handler must be called
             base.OnModuleLoaded(e);
-        }
-
-        protected override void Update(GameTime gameTime)
-        {
-            if (GameService.Gw2Mumble.IsAvailable)
-            {
-                foreach (var player in this.playerMumbleService.OtherPlayerInformation)
-                {
-                    if (!this.playerMarkers.TryGetValue(player.Key, out var marker))
-                    {
-                        marker = (null, new PlayerMarker());
-                        GameService.Graphics.World.AddEntity(marker.PlayerMarker);
-                        this.playerMarkers[player.Key] = marker;
-                    }
-
-                    marker.PlayerMarker.Position = player.Value.MapPosition.ToVector();
-                    //marker.MapMarker.Marker.Position = player.Value.ContinentPosition;
-                }
-            }
         }
 
         /// <inheritdoc />

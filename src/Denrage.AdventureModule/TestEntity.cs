@@ -21,6 +21,7 @@ namespace Denrage.AdventureModule
             this.Texture = Module.Instance.ContentsManager.GetTexture("marker.png");
             this.ClipsBounds = false;
             this.drawObjectService = drawObjectService;
+            this.Parent = GameService.Graphics.SpriteScreen;
         }
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
