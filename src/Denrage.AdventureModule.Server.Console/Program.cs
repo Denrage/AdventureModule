@@ -1,7 +1,6 @@
 ﻿using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Server;
-using Denrage.AdventureModule.Server.MessageHandlers;
 using Denrage.AdventureModule.Server.Services;
 using System;
 

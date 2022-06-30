@@ -1,5 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Denrage.AdventureModule.Entities;
+using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +48,7 @@ namespace Denrage.AdventureModule.UserInterface
         {
             foreach (var item in this.playerMumbleService.OtherPlayerInformation)
             {
-                var location = MapMarkerContainer.MumbleUtils.ContinentToMapScreen(item.Value.ContinentPosition.ToVector());
+                var location = MapUtils.ContinentToMapScreen(item.Value.ContinentPosition.ToVector());
                 location = new Vector2(location.X - 20, location.Y - 10);
 
                 spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);

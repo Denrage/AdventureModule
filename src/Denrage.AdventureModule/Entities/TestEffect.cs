@@ -3,7 +3,7 @@ using Blish_HUD.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Denrage.AdventureModule
+namespace Denrage.AdventureModule.Entities
 {
     public class TestEffect : SharedEffect
     {

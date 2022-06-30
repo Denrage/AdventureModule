@@ -3,6 +3,7 @@ using Blish_HUD.Input;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
@@ -82,7 +83,7 @@ namespace Denrage.AdventureModule
             {
                 await this.drawObjectService.Add(new[] {new MapMarker
                 {
-                    Position = this.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
+                    Position = MapUtils.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
                     Username = this.loginService.Name,
                     Id = Guid.NewGuid(),
                 } }, false, default);
@@ -96,8 +97,8 @@ namespace Denrage.AdventureModule
             var maxX = screenPosition.X + 10;
             var maxY = screenPosition.Y + 10;
 
-            var topLeft = this.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(x, y));
-            var bottomRight = this.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(maxX, maxY));
+            var topLeft = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(x, y));
+            var bottomRight = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(maxX, maxY));
 
             foreach (var marker in this.drawObjectService.GetDrawObjects<MapMarker>())
             {
@@ -110,14 +111,6 @@ namespace Denrage.AdventureModule
             return null;
         }
 
-        private Microsoft.Xna.Framework.Vector2 ScreenToContinentCoords(Microsoft.Xna.Framework.Vector2 screenCoordinates)
-        {
-            var mapCenter = GameService.Gw2Mumble.UI.MapCenter;
-            var scale = (float)GameService.Gw2Mumble.UI.MapScale * 0.897f;
-            var boundsCenter = GameService.Graphics.SpriteScreen.Size.ToVector2() / 2f;
-            return ((screenCoordinates - boundsCenter) * scale) + new Microsoft.Xna.Framework.Vector2((float)mapCenter.X, (float)mapCenter.Y);
-        }
-
         protected override void Initialize()
         {
 
@@ -125,7 +118,7 @@ namespace Denrage.AdventureModule
 
         protected override async Task LoadAsync()
         {
-            GameService.Graphics.World.AddEntity(new TestEntity());
+            GameService.Graphics.World.AddEntity(new Entities.TestEntity());
             this.tcpService.Connected += () => Logger.Info("Connected");
             this.tcpService.Disconnected += async () =>
             {
