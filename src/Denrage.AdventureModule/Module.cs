@@ -58,28 +58,56 @@ namespace Denrage.AdventureModule
             this.placeMapMarkerKeybind.Value.Activated += async delegate { await PlaceMapMarker(); };
         }
 
-        private Task PlaceMapMarker()
+        private async Task PlaceMapMarker()
         {
             if (!GameService.Gw2Mumble.IsAvailable)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             if (!GameService.Gw2Mumble.UI.IsMapOpen)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             var mousePosition = GameService.Input.Mouse.Position;
 
-            this.drawObjectService.Add(new[] {new MapMarker
-            {
-                Position = this.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
-                Username = this.loginService.Name,
-                Id = Guid.NewGuid(),
-            } }, false, default);
+            var existingMarker = this.GetUserMarker(mousePosition.ToVector2());
 
-            return Task.CompletedTask;
+            if (existingMarker != null)
+            {
+                await this.drawObjectService.Remove<MapMarker>(new[] { existingMarker.Id }, false, default);
+            }
+            else
+            {
+                await this.drawObjectService.Add(new[] {new MapMarker
+                {
+                    Position = this.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
+                    Username = this.loginService.Name,
+                    Id = Guid.NewGuid(),
+                } }, false, default);
+            }
+        }
+
+        private MapMarker GetUserMarker(Microsoft.Xna.Framework.Vector2 screenPosition)
+        {
+            var x = screenPosition.X - 10;
+            var y = screenPosition.Y - 10;
+            var maxX = screenPosition.X + 10;
+            var maxY = screenPosition.Y + 10;
+
+            var topLeft = this.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(x, y));
+            var bottomRight = this.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(maxX, maxY));
+
+            foreach (var marker in this.drawObjectService.GetDrawObjects<MapMarker>())
+            {
+                if (marker.Position.X > topLeft.X && marker.Position.X < bottomRight.X && marker.Position.Y > topLeft.Y && marker.Position.Y < bottomRight.Y)
+                {
+                    return marker;
+                }
+            }
+
+            return null;
         }
 
         private Microsoft.Xna.Framework.Vector2 ScreenToContinentCoords(Microsoft.Xna.Framework.Vector2 screenCoordinates)
