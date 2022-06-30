@@ -1,12 +1,10 @@
 ﻿using Denrage.AdventureModule.Libs.Messages.Data;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Denrage.AdventureModule.Libs.Messages
 {
-    public class WhiteboardRemoveLineMessage : Message
+    public class AddMapMarkersMessage : Message
     {
-        public List<Guid> Ids { get; set; }
+        public List<MapMarker> Markers { get; set; }
     }
 }

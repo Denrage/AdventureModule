@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Denrage.AdventureModule.Libs.Messages
 {
-    public class WhiteboardAddOwnLineMessage : Message
+    public class AddOwnMapMarkersMessage : Message
     {
-        public List<Line> Lines { get; set; }
+        public List<MapMarker> Markers { get; set; }
     }
 }

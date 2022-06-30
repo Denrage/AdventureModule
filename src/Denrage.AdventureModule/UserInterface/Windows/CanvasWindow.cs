@@ -24,11 +24,12 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         private bool leftMouseDown = false;
         private Line currentLine = default;
-        private WhiteboardService whiteboardService;
+        private DrawObjectService drawObjectService;
+        private LoginService loginService;
         private Panel canvas;
         private Mode currentMode = Mode.Paint;
 
-        public void Initialize(WhiteboardService whiteboardService)
+        public void Initialize(DrawObjectService drawObjectService, LoginService loginService)
         {
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 0, 500, 500 - 30));
             var toolbar = new FlowPanel()
@@ -79,7 +80,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 this.leftMouseDown = false;
                 currentLine = default;
             };
-            this.whiteboardService = whiteboardService;
+            this.drawObjectService = drawObjectService;
+            this.loginService = loginService;
         }
 
         public override void UpdateContainer(GameTime gameTime)
@@ -111,7 +113,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 var rectangleY = mouseY - 5;
                 var mouseArea = new Rectangle(rectangleX, rectangleY, mouseX - rectangleX + 5, mouseY - rectangleY + 5);
                 var linesToDelete = new List<Line>();
-                foreach (var line in this.whiteboardService.UserLines.Values)
+                foreach (var line in this.drawObjectService.GetDrawObjects<Line>().Where(x => x.Username == this.loginService.Name))
                 {
                     var currentLine = line;
                     if (Helper.CohenSutherland.IsIntersecting(ref currentLine, ref mouseArea))
@@ -120,7 +122,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                     }
                 }
 
-                this.whiteboardService.DeleteUserLines(linesToDelete);
+                this.drawObjectService.Remove<Line>(linesToDelete.Select(x => x.Id), false, default);
             }
         }
 
@@ -132,8 +134,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 mouseY > this.canvas.AbsoluteBounds.Y &&
                 mouseY < this.canvas.AbsoluteBounds.Y + this.canvas.AbsoluteBounds.Height)
             {
-                if (currentLine.Start.X == 0 && currentLine.Start.Y == 0)
+                if (currentLine is null)
                 {
+                    currentLine = new Line();
                     currentLine.LineColor = new Line.Color()
                     {
                         A = 255,
@@ -157,8 +160,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
                     currentLine.TimeStamp = System.DateTime.UtcNow;
                     currentLine.Id = System.Guid.NewGuid();
+                    currentLine.Username = this.loginService.Name;
 
-                    this.whiteboardService.AddUserLine(currentLine);
+                    this.drawObjectService.Add(new[] {currentLine}, false, default);
 
                     currentLine = new Line()
                     {
@@ -181,7 +185,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            foreach (var line in this.whiteboardService.UserLines.Values.Concat(this.whiteboardService.ServerLines.Values).OrderBy(x => x.TimeStamp))
+            foreach (var line in this.drawObjectService.GetDrawObjects<Line>().OrderBy(x => x.TimeStamp))
             {
                 var startRectangle = new Rectangle(line.Start.X, line.Start.Y, 1, 1);
                 startRectangle = startRectangle.ToBounds(this.AbsoluteBounds);

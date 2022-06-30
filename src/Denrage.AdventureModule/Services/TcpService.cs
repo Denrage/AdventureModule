@@ -26,12 +26,12 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Connected;
 
-        public TcpService(Func<WhiteboardService> whiteboardService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
+        public TcpService(Func<DrawObjectService> drawObjectService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
         {
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
-                { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(whiteboardService)) },
-                { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(whiteboardService)) },
+                { typeof(AddDrawObjectMessage<Line>).Name, (typeof(AddDrawObjectMessage<Line>), new AddDrawObjectMessageHandler<Line>(drawObjectService)) },
+                { typeof(RemoveDrawObjectMessage<Line>).Name, (typeof(RemoveDrawObjectMessage<Line>), new RemoveDrawObjectMessageHandler<Line>(drawObjectService)) },
                 { typeof(PlayersMumbleMessage).Name, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).Name, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).Name, (typeof(LoginResponseMessage), null) },
@@ -62,7 +62,11 @@ namespace Denrage.AdventureModule.Services
         {
             var json = System.Text.Encoding.UTF8.GetString(data);
             var tcpMessage = System.Text.Json.JsonSerializer.Deserialize<TcpMessage>(json);
-            var message = (Message)System.Text.Json.JsonSerializer.Deserialize(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type);
+            var message = (Message)Newtonsoft.Json.JsonConvert.DeserializeObject(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type, new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto,
+            });
+
             if (message is ResponseMessage)
             {
                 if (this.responseTasks.TryRemove(message.Id, out var completionSource))
@@ -111,10 +115,15 @@ namespace Denrage.AdventureModule.Services
                 message.Id = Guid.NewGuid();
             }
 
+            var jsonOptions = new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto,
+            };
+
             var tcpMessage = new TcpMessage
             {
-                TypeIdentifier = typeof(T).Name,
-                Data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message))
+                TypeIdentifier = message.GetType().Name,
+                Data = Newtonsoft.Json.JsonConvert.SerializeObject(message, jsonOptions),
             };
 
             var data = System.Text.Json.JsonSerializer.Serialize(tcpMessage);

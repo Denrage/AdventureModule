@@ -1,4 +1,7 @@
-﻿using Denrage.AdventureModule.Server;
+﻿using Denrage.AdventureModule.Libs.Messages;
+using Denrage.AdventureModule.Libs.Messages.Data;
+using Denrage.AdventureModule.Server;
+using Denrage.AdventureModule.Server.MessageHandlers;
 using Denrage.AdventureModule.Server.Services;
 using System;
 
@@ -9,11 +12,12 @@ namespace MyApp // Note: actual namespace depends on the project name.
         static void Main(string[] args)
         {
             TcpService service = null;
-            WhiteboardService whiteboardService = null;
+            DrawObjectService drawObjectService = null;
             PlayerMumbleService playerMumbleService = null;
             var userManagementService = new UserManagementService();
-            service = new TcpService(() => whiteboardService, userManagementService, () => playerMumbleService);
-            whiteboardService = new WhiteboardService(service, userManagementService);
+            service = new TcpService(() => drawObjectService, userManagementService, () => playerMumbleService);
+            drawObjectService = new DrawObjectService(service, userManagementService);
+            drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
             playerMumbleService = new PlayerMumbleService(service, userManagementService);
             service.Initialize().Wait();
 

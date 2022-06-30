@@ -1,14 +1,19 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Input;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AdventureModule.Libs.Messages;
+using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
 using Denrage.AdventureModule.UserInterface.Windows;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule
@@ -18,12 +23,13 @@ namespace Denrage.AdventureModule
     {
 
         public static readonly Logger Logger = Logger.GetLogger<Module>();
-        private readonly WhiteboardService whiteboardService;
+        private readonly DrawObjectService drawObjectService;
         private readonly TcpService tcpService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
         private readonly Dictionary<string, (MapMarker MapMarker, PlayerMarker PlayerMarker)> playerMarkers = new Dictionary<string, (MapMarker, PlayerMarker)>();
         private MapMarker mapMarker;
+        private SettingEntry<KeyBinding> placeMapMarkerKeybind;
 
         internal static Module Instance { get; private set; }
 
@@ -38,16 +44,46 @@ namespace Denrage.AdventureModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
             Instance = this;
-            this.tcpService = new TcpService(() => this.whiteboardService, () =>  this.loginService, () => this.playerMumbleService);
+            this.tcpService = new TcpService(() => this.drawObjectService, () =>  this.loginService, () => this.playerMumbleService);
             this.playerMumbleService = new PlayerMumbleService(this.tcpService);
             this.loginService = new LoginService(this.tcpService);
-            this.whiteboardService = new WhiteboardService(this.tcpService, this.loginService);
+            this.drawObjectService = new DrawObjectService(this.tcpService);
+            this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
         }
 
         protected override void DefineSettings(SettingCollection settings)
         {
-
+            this.placeMapMarkerKeybind = settings.DefineSetting("DefaultMountBinding", new KeyBinding(Keys.L), () => "Map Marker", () => "");
+            this.placeMapMarkerKeybind.Value.Enabled = true;
+            this.placeMapMarkerKeybind.Value.Activated += async delegate { await PlaceMapMarker(); };
         }
+
+        private Task PlaceMapMarker()
+        {
+            // TODO: Create service, make them deleteable and propagte them through the group
+            if (!GameService.Gw2Mumble.UI.IsMapOpen)
+            {
+                return Task.CompletedTask;
+            }
+
+            var mousePosition = GameService.Input.Mouse.Position;
+
+            _ = new MapMarker()
+            {
+                Parent = GameService.Graphics.SpriteScreen,
+                //Position = this.ScreenToContinentCoords(mousePosition.ToVector2()),
+            };
+
+            return Task.CompletedTask;
+        }
+
+        //private Vector2 ScreenToContinentCoords(Vector2 screenCoordinates)
+        //{
+        //    var mapCenter = GameService.Gw2Mumble.UI.MapCenter;
+        //    var scale = (float)GameService.Gw2Mumble.UI.MapScale * 0.897f;
+        //    var boundsCenter = GameService.Graphics.SpriteScreen.Size.ToVector2() / 2f;
+        //    return ((screenCoordinates - boundsCenter) * scale) + new Vector2((float)mapCenter.X, (float)mapCenter.Y);
+        //}
 
         protected override void Initialize()
         {
@@ -76,17 +112,17 @@ namespace Denrage.AdventureModule
             };
             await this.tcpService.Initialize();
 
-            this.mapMarker = new MapMarker()
-            {
-                Parent = GameService.Graphics.SpriteScreen,
-            };
-
-            //var window = new CanvasWindow()
+            //this.mapMarker = new MapMarker()
             //{
-            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //    Parent = GameService.Graphics.SpriteScreen,
             //};
-            //window.Initialize(this.whiteboardService);
-            //window.Show();
+
+            var window = new CanvasWindow()
+            {
+                Parent = GraphicsService.Graphics.SpriteScreen,
+            };
+            window.Initialize(this.drawObjectService, this.loginService);
+            window.Show();
 
             //var window = new ImageWindow(this.ContentsManager)
             //{
@@ -108,18 +144,19 @@ namespace Denrage.AdventureModule
         {
             foreach (var player in this.playerMumbleService.OtherPlayerInformation)
             {
-                if (!this.playerMarkers.TryGetValue(player.Key, out var marker))
-                {
-                    marker = (new MapMarker() { Parent = GameService.Graphics.SpriteScreen }, new PlayerMarker());
-                    GameService.Graphics.World.AddEntity(marker.PlayerMarker);
-                    this.playerMarkers[player.Key] = marker;
-                }
+                //if (!this.playerMarkers.TryGetValue(player.Key, out var marker))
+                //{
+                //    marker = (new MapMarker() { Parent = GameService.Graphics.SpriteScreen }, new PlayerMarker());
+                //    GameService.Graphics.World.AddEntity(marker.PlayerMarker);
+                //    this.playerMarkers[player.Key] = marker;
+                //}
 
-                marker.PlayerMarker.Position = player.Value.MapPosition.ToVector();
-                marker.MapMarker.Position = player.Value.ContinentPosition.ToVector();
+                //marker.PlayerMarker.Position = player.Value.MapPosition.ToVector();
+                //marker.MapMarker.Position = player.Value.ContinentPosition.ToVector();
             }
 
-            this.mapMarker.Position = new Vector2((float)GameService.Gw2Mumble.UI.MapPosition.X, (float)GameService.Gw2Mumble.UI.MapPosition.Y);
+
+            //this.mapMarker.Position = new Vector2((float)GameService.Gw2Mumble.UI.MapPosition.X, (float)GameService.Gw2Mumble.UI.MapPosition.Y);
         }
 
         /// <inheritdoc />

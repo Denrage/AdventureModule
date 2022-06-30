@@ -15,7 +15,7 @@ public class TcpService : IDisposable
 
     public event Action<Guid> ClientConnected;
 
-    public TcpService(Func<WhiteboardService> getWhiteboardService, UserManagementService userManagementService, Func<PlayerMumbleService> playerMumbleService)
+    public TcpService(Func<DrawObjectService> getDrawObjectService, UserManagementService userManagementService, Func<PlayerMumbleService> playerMumbleService)
     {
         this.cancellationTokenSource = new CancellationTokenSource();
         this.server = new TcpServer();
@@ -24,8 +24,8 @@ public class TcpService : IDisposable
 
         this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
         {
-            { typeof(WhiteboardAddLineMessage).Name, (typeof(WhiteboardAddLineMessage), new WhiteboardAddLineMessageHandler(getWhiteboardService)) },
-            { typeof(WhiteboardRemoveLineMessage).Name, (typeof(WhiteboardRemoveLineMessage), new WhiteboardRemoveLineMessageHandler(getWhiteboardService)) },
+            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>).Name, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
+            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>).Name, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
             { typeof(PlayerMumbleMessage).Name, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
             { typeof(PingMessage).Name, (typeof(PingMessage), new PingMessageHandler(this)) },
             { typeof(LoginMessage).Name, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
@@ -71,15 +71,21 @@ public class TcpService : IDisposable
     public TcpMessage CreateMessage<T>(T message)
         => new()
         {
-            TypeIdentifier = typeof(T).Name,
-            Data = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(message)),
+            TypeIdentifier = message.GetType().Name,
+            Data = Newtonsoft.Json.JsonConvert.SerializeObject(message, new Newtonsoft.Json.JsonSerializerSettings()
+            {
+                TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto,
+            }),
         };
 
     private async void DataReceived(Guid clientId, byte[] data)
     {
         var json = System.Text.Encoding.UTF8.GetString(data);
         var tcpMessage = System.Text.Json.JsonSerializer.Deserialize<TcpMessage>(json);
-        var message = System.Text.Json.JsonSerializer.Deserialize(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type);
+        var message = Newtonsoft.Json.JsonConvert.DeserializeObject(tcpMessage.Data, this.messageTypes[tcpMessage.TypeIdentifier].Type, new Newtonsoft.Json.JsonSerializerSettings()
+        {
+            TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto,
+        });
         await this.messageTypes[tcpMessage.TypeIdentifier].Handler.Handle(clientId, message, this.cancellationTokenSource.Token);
     }
 

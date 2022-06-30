@@ -2,7 +2,7 @@
 
 namespace Denrage.AdventureModule.Libs.Messages.Data
 {
-    public struct Line
+    public class Line : DrawObject
     {
         public struct Color
         {
@@ -21,8 +21,6 @@ namespace Denrage.AdventureModule.Libs.Messages.Data
 
             public int Y { get; set; }
         }
-
-        public Guid Id { get; set; }
 
         public Point Start { get; set; }
 

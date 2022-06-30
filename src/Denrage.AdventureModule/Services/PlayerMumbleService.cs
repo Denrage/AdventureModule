@@ -34,6 +34,11 @@ namespace Denrage.AdventureModule.Services
                 ct.ThrowIfCancellationRequested();
                 await Task.Delay(TimeSpan.FromMilliseconds(50), ct);
 
+                if (!GameService.Gw2Mumble.IsAvailable)
+                {
+                    continue;
+                }
+
                 if (!this.lastInformation.Equal(GameService.Gw2Mumble))
                 {
                     var information = GameService.Gw2Mumble.ToInformation();

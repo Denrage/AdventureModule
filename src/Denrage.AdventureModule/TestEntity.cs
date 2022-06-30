@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -11,8 +12,8 @@ namespace Denrage.AdventureModule
 {
     public class MapMarker : Control
     {
-        public Vector2 Position { get; set; }
-
+        public Libs.Messages.Data.MapMarker Marker { get; set; }
+        
         public Texture2D Texture { get; set; }
 
         public MapMarker()
@@ -23,7 +24,7 @@ namespace Denrage.AdventureModule
 
         protected override void Paint(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var location = MumbleUtils.ContinentToMapScreen(this.Position);
+            var location = MumbleUtils.ContinentToMapScreen(this.Marker.Position.ToVector());
             location = new Vector2(location.X - 20, location.Y - 10);
             //spriteBatch.DrawRectangle(new RectangleF(new Vector2(500, 500), new Size2(40, 20)), Color.DarkOrange, 4f);
             spriteBatch.Draw(this.Texture, new Rectangle((int)location.X, (int)location.Y, 40, 20), Color.White);

@@ -4,6 +4,6 @@
     {
         public string TypeIdentifier { get; set; }
 
-        public byte[] Data { get; set; }
+        public string Data { get; set; }
     }
 }
