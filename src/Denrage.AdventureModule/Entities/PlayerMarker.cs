@@ -53,12 +53,9 @@ namespace Denrage.AdventureModule.Entities
 
         public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
         {
-            const float heightOffset = 1.5f;
             const float minSize = 5f;
             const float maxSize = 2048f;
-            //var position = new Vector3(-25.414f, -4.129f, 121.7f);
             var position = this.Position;
-            var direction = new Vector3((float)System.Math.PI / 2, 0f, (float)System.Math.PI / 2);
 
 
             var matrix = Matrix.CreateScale(1f, 1f, 1f);

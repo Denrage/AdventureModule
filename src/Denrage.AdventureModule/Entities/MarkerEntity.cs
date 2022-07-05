@@ -1,11 +1,14 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Content;
 using Blish_HUD.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
+using System.Linq;
 
 namespace Denrage.AdventureModule.Entities
 {
-    public class TestEntity : IEntity
+    public class MarkerEntity : IEntity
     {
         private static DynamicVertexBuffer _sharedVertexBuffer;
         private static readonly Vector4[] _screenVerts = new Vector4[4];
@@ -16,21 +19,24 @@ namespace Denrage.AdventureModule.Entities
 
         private static readonly TestEffect sharedEffect;
 
-        private readonly Texture2D texture;
+        private readonly AsyncTexture2D texture;
 
         public float DrawOrder => default;
 
-        private BasicEffect effect = new BasicEffect(GameService.Graphics.GraphicsDevice);
+        public Vector3 Position { get; set; }
 
-        static TestEntity()
+        public Vector3? Rotation { get; set; }
+
+        static MarkerEntity()
         {
             sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"));
             CreateSharedVertexBuffer();
         }
 
-        public TestEntity()
+        public MarkerEntity(AsyncTexture2D texture)
         {
-            this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
+            this.texture = texture;
+            //this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
         }
 
         private static void CreateSharedVertexBuffer()
@@ -51,50 +57,52 @@ namespace Denrage.AdventureModule.Entities
 
         public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
         {
-            const float heightOffset = 1.5f;
             const float minSize = 5f;
             const float maxSize = 2048f;
-            var position = new Vector3(-25.414f, -4.129f, 121.7f);
-            var direction = new Vector3((float)System.Math.PI / 2, 0f, (float)System.Math.PI / 2);
-
+            //var position = new Vector3(-25.414f, -4.129f, 121.7f);
+            //var direction = new Vector3((float)System.Math.PI / 2, 0f, (float)System.Math.PI / 2);
 
             var matrix = Matrix.CreateScale(1f, 1f, 1f);
 
             graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
 
+            if (!this.Rotation.HasValue)
+            {
+                matrix *= Matrix.CreateBillboard(this.Position,
+                                          new Vector3(camera.Position.X,
+                                                      camera.Position.Y,
+                                                      camera.Position.Z),
+                                          new Vector3(0, 0, 1),
+                                          camera.Forward);
 
-            //matrix *= Matrix.CreateBillboard(position,
-            //                          new Vector3(camera.Position.X,
-            //                                      camera.Position.Y,
-            //                                      camera.Position.Z),
-            //                          new Vector3(0, 0, 1),
-            //                          camera.Forward);
+                // Enforce min/max size
+                var transformMatrix = Matrix.Multiply(Matrix.Multiply(matrix, sharedEffect.View),
+                                                      sharedEffect.Projection);
 
-            //// Enforce min/max size
-            //var transformMatrix = Matrix.Multiply(Matrix.Multiply(matrix, sharedEffect.View),
-            //                                      sharedEffect.Projection);
+                for (int i = 0; i < _faceVerts.Length; i++)
+                {
+                    _screenVerts[i] = Vector4.Transform(_faceVerts[i], transformMatrix);
+                    _screenVerts[i] /= _screenVerts[i].W;
+                }
 
-            //for (int i = 0; i < _faceVerts.Length; i++)
-            //{
-            //    _screenVerts[i] = Vector4.Transform(_faceVerts[i], transformMatrix);
-            //    _screenVerts[i] /= _screenVerts[i].W;
-            //}
+                // Very alloc heavy
+                var bounds = BoundingRectangle.CreateFrom(_screenVerts.Select(s => new Point2(s.X, s.Y)).ToArray());
 
-            //// Very alloc heavy
-            //var bounds = BoundingRectangle.CreateFrom(_screenVerts.Select(s => new Point2(s.X, s.Y)).ToArray());
+                float pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
+                float limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
 
-            //float pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
-            //float limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
-
-            //// Eww
-            //matrix *= Matrix.CreateTranslation(-position)
-            //             * Matrix.CreateScale(limitY / pixelSizeY)
-            //             * Matrix.CreateTranslation(position);
-
-            matrix *= Matrix.CreateRotationX(direction.X)
-             * Matrix.CreateRotationY(direction.Y)
-             * Matrix.CreateRotationZ(direction.Z)
-             * Matrix.CreateTranslation(position);
+                // Eww
+                matrix *= Matrix.CreateTranslation(-this.Position)
+                             * Matrix.CreateScale(limitY / pixelSizeY)
+                             * Matrix.CreateTranslation(this.Position);
+            }
+            else
+            {
+                matrix *= Matrix.CreateRotationX(this.Rotation.Value.X)
+                 * Matrix.CreateRotationY(this.Rotation.Value.Y)
+                 * Matrix.CreateRotationZ(this.Rotation.Value.Z)
+                 * Matrix.CreateTranslation(this.Position);
+            }
 
             sharedEffect.SetEntityState(matrix, this.texture, 1f, 0f, 2500f, false, Color.White, true);
 
@@ -105,6 +113,21 @@ namespace Denrage.AdventureModule.Entities
                 pass.Apply();
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
             }
+        }
+
+        public void Update(GameTime gameTime)
+        {
+        }
+    }
+
+    public class LineEntity : IEntity
+    {
+        private BasicEffect effect = new BasicEffect(GameService.Graphics.GraphicsDevice);
+
+        public float DrawOrder => default;
+
+        public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
+        {
 
             this.effect.CurrentTechnique.Passes[0].Apply();
 
@@ -115,7 +138,6 @@ namespace Denrage.AdventureModule.Entities
 
             var vertices = new[] { new VertexPositionColor(GameService.Gw2Mumble.PlayerCharacter.Position, Color.White), new VertexPositionColor(lineEnd, Color.White) };
             graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
-
         }
 
         public void Update(GameTime gameTime)
