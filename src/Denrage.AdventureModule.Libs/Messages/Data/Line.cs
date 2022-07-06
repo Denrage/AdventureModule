@@ -15,16 +15,11 @@ namespace Denrage.AdventureModule.Libs.Messages.Data
             public byte A { get; set; }
         }
 
-        public struct Point
-        {
-            public int X { get; set; }
+        public int StrokeWidth { get; set; }
 
-            public int Y { get; set; }
-        }
+        public Vector2 Start { get; set; }
 
-        public Point Start { get; set; }
-
-        public Point End { get; set; }
+        public Vector2 End { get; set; }
 
         public DateTime TimeStamp { get; set; }
 

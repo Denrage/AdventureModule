@@ -50,8 +50,8 @@ namespace Denrage.AdventureModule.Helper
             // compute outcodes for P0, P1, and whatever point lies outside the clip rectangle
             var pointOne = ComputeOutCode(line.Start.X, line.Start.Y, ref rectangle);
             var pointTwo = ComputeOutCode(line.End.X, line.End.Y, ref rectangle);
-            var currentStart = line.Start;
-            var currentEnd = line.End;
+            var currentStart = new Point((int)line.Start.X, (int)line.Start.Y);
+            var currentEnd = new Point((int)line.End.X, (int)line.End.Y);
             bool accept = false;
 
             while (true)
