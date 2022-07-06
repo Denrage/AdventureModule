@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
@@ -28,11 +29,15 @@ namespace Denrage.AdventureModule.UserInterface.Windows
         private LoginService loginService;
         private Panel canvas;
         private Mode currentMode = Mode.Paint;
+        private bool? finishedResize;
+        private FlowPanel toolbar;
 
         public void Initialize(DrawObjectService drawObjectService, LoginService loginService)
         {
-            this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 0, 500, 500 - 30));
-            var toolbar = new FlowPanel()
+            this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));
+            this.Location = new Point(0, 100);
+            this.CanResize = true;
+            this.toolbar = new FlowPanel()
             {
                 FlowDirection = ControlFlowDirection.LeftToRight,
                 HeightSizingMode = SizingMode.AutoSize,
@@ -61,17 +66,15 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
             this.canvas = new Panel()
             {
-                Location = new Point(0, toolbar.Location.Y + toolbar.Height),
                 Parent = this,
-                Width = this.ContentRegion.Width,
-                Height = this.ContentRegion.Height - toolbar.Height,
                 BackgroundColor = Color.White,
             };
 
+            this.SetCanvasSize();
+
             toolbar.Resized += (s, e) =>
             {
-                canvas.Location = new Point(0, toolbar.Location.Y + toolbar.Height);
-                canvas.Height = this.ContentRegion.Height - toolbar.Height;
+                this.SetCanvasSize();
             };
             //this.ClipsBounds = true;
             this.LeftMouseButtonPressed += (s, e) => this.leftMouseDown = true;
@@ -84,18 +87,39 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             this.loginService = loginService;
         }
 
+        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Rectangle bounds) => base.PaintBeforeChildren(spriteBatch, bounds);
+
         public override void UpdateContainer(GameTime gameTime)
         {
             var mouseX = GameService.Input.Mouse.Position.X;
             var mouseY = GameService.Input.Mouse.Position.Y;
 
-            if (currentMode == Mode.Paint)
+            if (!this.finishedResize.HasValue && this.Resizing)
             {
-                this.Paint(mouseX, mouseY);
+                this.finishedResize = false;
             }
-            else if (currentMode == Mode.Erase)
+
+            if (this.finishedResize.HasValue && !this.finishedResize.Value && !this.Resizing)
             {
-                this.Erase(mouseX, mouseY);
+                this.finishedResize = true;
+            }
+
+            if (this.finishedResize.HasValue && this.finishedResize.Value)
+            {
+                this.finishedResize = null;
+                System.Diagnostics.Debug.WriteLine("Resizing finished");
+            }
+
+            if (!this.Dragging && !this.Resizing)
+            {
+                if (currentMode == Mode.Paint)
+                {
+                    this.Paint(mouseX, mouseY);
+                }
+                else if (currentMode == Mode.Erase)
+                {
+                    this.Erase(mouseX, mouseY);
+                }
             }
 
             base.UpdateContainer(gameTime);
@@ -162,7 +186,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                     currentLine.Id = System.Guid.NewGuid();
                     currentLine.Username = this.loginService.Name;
 
-                    this.drawObjectService.Add(new[] {currentLine}, false, default);
+                    this.drawObjectService.Add(new[] { currentLine }, false, default);
 
                     currentLine = new Line()
                     {
@@ -183,9 +207,32 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             }
         }
 
+        protected override void OnResized(ResizedEventArgs e)
+        {
+            base.OnResized(e);
+
+            this.ContentRegion = new Rectangle(this.ContentRegion.X,
+                                               this.ContentRegion.Y,
+                                               this.Width - this.ContentRegion.X,
+                                               this.Height - this.ContentRegion.Y);
+
+            if (canvas != null && toolbar != null)
+            {
+                this.SetCanvasSize();
+            }
+        }
+
+        private void SetCanvasSize()
+        {
+            const int margin = 20;
+            canvas.Location = new Point(margin, toolbar.Location.Y + toolbar.Height + margin);
+            canvas.Height = this.ContentRegion.Height - toolbar.Height - (margin * 2);
+            canvas.Width = this.ContentRegion.Width - (margin * 2);
+        }
+
         public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            foreach (var line in this.drawObjectService.GetDrawObjects<Line>().OrderBy(x => x.TimeStamp))
+            foreach (var line in this.drawObjectService.GetDrawObjects<Line>().Where(x => this.canvas.AbsoluteBounds.Contains(x.Start.ToVector()) && this.canvas.AbsoluteBounds.Contains(x.End.ToVector())).OrderBy(x => x.TimeStamp))
             {
                 var startRectangle = new Rectangle(line.Start.X, line.Start.Y, 1, 1);
                 startRectangle = startRectangle.ToBounds(this.AbsoluteBounds);
@@ -203,6 +250,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 var mouseArea = new Rectangle(rectangleX, rectangleY, mouseX - rectangleX + 5, mouseY - rectangleY + 5);
                 spriteBatch.DrawRectangle(mouseArea, Color.Black);
             }
+
+            base.PaintAfterChildren(spriteBatch, bounds);
         }
     }
 }

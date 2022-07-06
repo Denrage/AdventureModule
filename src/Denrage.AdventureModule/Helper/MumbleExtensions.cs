@@ -52,6 +52,13 @@ namespace Denrage.AdventureModule.Helper
                 Y = vector.Y,
             };
 
+        public static Microsoft.Xna.Framework.Vector2 ToVector(this Line.Point point)
+            => new Microsoft.Xna.Framework.Vector2()
+            {
+                X = point.X,
+                Y = point.Y,
+            };
+
         public static Microsoft.Xna.Framework.Vector3 ToVector(this Vector3 vector)
             => new Microsoft.Xna.Framework.Vector3()
             {
