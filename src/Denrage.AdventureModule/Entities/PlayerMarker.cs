@@ -37,7 +37,10 @@ namespace Denrage.AdventureModule.Entities
 
         private static void CreateSharedVertexBuffer()
         {
-            _sharedVertexBuffer = new DynamicVertexBuffer(GameService.Graphics.GraphicsDevice, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
+            using (var context = GameService.Graphics.LendGraphicsDeviceContext())
+            {
+                _sharedVertexBuffer = new DynamicVertexBuffer(context.GraphicsDevice, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
+            }
 
             var verts = new VertexPositionTexture[_faceVerts.Length];
 

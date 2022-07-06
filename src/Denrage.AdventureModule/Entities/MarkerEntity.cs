@@ -41,7 +41,10 @@ namespace Denrage.AdventureModule.Entities
 
         private static void CreateSharedVertexBuffer()
         {
-            _sharedVertexBuffer = new DynamicVertexBuffer(GameService.Graphics.GraphicsDevice, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
+            using (var context = GameService.Graphics.LendGraphicsDeviceContext())
+            {
+                _sharedVertexBuffer = new DynamicVertexBuffer(context.GraphicsDevice, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
+            }
 
             var verts = new VertexPositionTexture[_faceVerts.Length];
 
@@ -122,9 +125,15 @@ namespace Denrage.AdventureModule.Entities
 
     public class LineEntity : IEntity
     {
-        private BasicEffect effect = new BasicEffect(GameService.Graphics.GraphicsDevice);
+        private BasicEffect effect;
 
         public float DrawOrder => default;
+
+        public LineEntity()
+        {
+            var context = GameService.Graphics.LendGraphicsDeviceContext();
+            this.effect = new BasicEffect(context.GraphicsDevice);
+        }
 
         public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
         {

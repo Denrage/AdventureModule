@@ -118,7 +118,7 @@ namespace Denrage.AdventureModule
 
         protected override async Task LoadAsync()
         {
-            GameService.Graphics.World.AddEntity(new Entities.TestEntity());
+            GameService.Graphics.World.AddEntity(new Entities.MarkerEntity(this.ContentsManager.GetTexture("marker.png")));
             this.tcpService.Connected += () => Logger.Info("Connected");
             this.tcpService.Disconnected += async () =>
             {

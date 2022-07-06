@@ -76,7 +76,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 this.SetCanvasSize();
             };
-            //this.ClipsBounds = true;
+
             this.LeftMouseButtonPressed += (s, e) => this.leftMouseDown = true;
             this.LeftMouseButtonReleased += (s, e) =>
             {
