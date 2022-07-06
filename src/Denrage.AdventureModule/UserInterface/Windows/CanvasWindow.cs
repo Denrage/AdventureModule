@@ -17,9 +17,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 {
     public class CanvasWindow : WindowBase2
     {
+        private Tool[] tools;
         private bool leftMouseDown = false;
         private DrawObjectService drawObjectService;
         private LoginService loginService;
+        private Panel toolControls;
         private Panel canvas;
         private bool? finishedResize;
         private FlowPanel toolbar;
@@ -27,33 +29,64 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public void Initialize(DrawObjectService drawObjectService, LoginService loginService)
         {
+            this.drawObjectService = drawObjectService;
+            this.loginService = loginService;
+
+            this.tools = new Tool[]
+            {
+                new Pen(this.loginService, this.drawObjectService),
+                new Eraser(this.loginService, this.drawObjectService),
+            };
+
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));
             this.Location = new Point(0, 100);
             this.CanResize = true;
             this.toolbar = new FlowPanel()
             {
-                FlowDirection = ControlFlowDirection.LeftToRight,
-                HeightSizingMode = SizingMode.AutoSize,
+                FlowDirection = ControlFlowDirection.SingleLeftToRight,
+                Height = 40,
                 Width = this.ContentRegion.Width,
                 Parent = this,
             };
 
-            var eraserButton = new StandardButton()
+            this.tool = this.tools[0];
+            foreach (var tool in this.tools)
             {
-                Text = "Eraser",
-                Parent = toolbar,
-            };
+                var button = new StandardButton()
+                {
+                    Text = tool.Name,
+                    Parent = toolbar,
+                };
 
-            eraserButton.Click += (s, e) =>
+                if (tool == this.tool)
+                {
+                    button.Enabled = false;
+                }
+
+                button.Click += (s, e) =>
+                {
+                    this.tool.Reset();
+
+                    foreach (var item in this.toolbar)
+                    {
+                        item.Enabled = true;
+                    }
+
+                    this.toolControls.Children.Clear();
+                    this.tool = tool;
+                    this.tool.Reset();
+                    button.Enabled = false;
+                    this.tool.Controls.Parent = this.toolControls;
+                    this.tool.Controls.Size = this.toolControls.ContentRegion.Size;
+                };
+            }
+
+            this.toolControls = new Panel()
             {
-                if (this.tool is Pen)
-                {
-                    this.tool = new Eraser(this.loginService, this.drawObjectService);
-                }
-                else
-                {
-                    this.tool = new Pen(this.loginService, this.drawObjectService);
-                }
+                Height = 40,
+                Width = this.ContentRegion.Width,
+                Parent = this,
+                Location = new Point(0, this.toolbar.Location.Y + this.toolbar.Height),
             };
 
             this.canvas = new Panel()
@@ -75,9 +108,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 this.leftMouseDown = false;
                 this.tool.Reset();
             };
-            this.drawObjectService = drawObjectService;
-            this.loginService = loginService;
-            this.tool = new Pen(this.loginService, this.drawObjectService);
         }
 
         public override void PaintBeforeChildren(SpriteBatch spriteBatch, Rectangle bounds) => base.PaintBeforeChildren(spriteBatch, bounds);
@@ -100,7 +130,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 System.Diagnostics.Debug.WriteLine("Resizing finished");
             }
 
-            if (!this.Dragging && !this.Resizing)
+            if (this.tool != null && !this.Dragging && !this.Resizing)
             {
                 this.tool.OnUpdate(new DrawContext()
                 {
@@ -131,8 +161,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows
         private void SetCanvasSize()
         {
             const int margin = 20;
-            canvas.Location = new Point(margin, toolbar.Location.Y + toolbar.Height + margin);
-            canvas.Height = this.ContentRegion.Height - toolbar.Height - (margin * 2);
+            canvas.Location = new Point(margin, this.toolControls.Location.Y + this.toolControls.Height + margin);
+            canvas.Height = this.ContentRegion.Height - this.toolControls.Height - (margin * 2);
             canvas.Width = this.ContentRegion.Width - (margin * 2);
         }
 
@@ -148,15 +178,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), 5);
             }
 
-            var mouseX = GameService.Input.Mouse.Position.X;
-            var mouseY = GameService.Input.Mouse.Position.Y;
-            if (this.tool is Eraser)
-            {
-                var rectangleX = mouseX - 5;
-                var rectangleY = mouseY - 5;
-                var mouseArea = new Rectangle(rectangleX, rectangleY, mouseX - rectangleX + 5, mouseY - rectangleY + 5);
-                spriteBatch.DrawRectangle(mouseArea, Color.Black);
-            }
+            this.tool.Paint(spriteBatch);
 
             base.PaintAfterChildren(spriteBatch, bounds);
         }

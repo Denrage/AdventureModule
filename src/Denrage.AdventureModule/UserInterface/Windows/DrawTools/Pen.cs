@@ -1,4 +1,5 @@
-﻿using Denrage.AdventureModule.Libs.Messages.Data;
+﻿using Blish_HUD.Controls;
+using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
 
 namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
@@ -8,6 +9,10 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
         private readonly LoginService loginService;
         private readonly DrawObjectService drawObjectService;
         private Line currentLine = default;
+
+        public override string Name => "Pen";
+
+        public override Container Controls { get; } = new Panel();
 
         public Pen(LoginService loginService, DrawObjectService drawObjectService)
         {
