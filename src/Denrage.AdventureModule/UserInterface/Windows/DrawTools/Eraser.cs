@@ -30,7 +30,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
             this.eraserSize = new CounterBox()
             {
-                MinValue = 0,
+                MinValue = 1,
                 MaxValue = 20,
                 Value = 5,
                 Parent = this.Controls,

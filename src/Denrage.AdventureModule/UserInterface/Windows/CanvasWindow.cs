@@ -175,7 +175,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 startRectangle = startRectangle.ToBounds(this.canvas.AbsoluteBounds);
                 var endRectangle = new Rectangle((int)line.End.X, (int)line.End.Y, 1, 1);
                 endRectangle = endRectangle.ToBounds(this.canvas.AbsoluteBounds);
-                spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), 5);
+                spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), line.StrokeWidth);
             }
 
             this.tool.Paint(spriteBatch);

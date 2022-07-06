@@ -8,16 +8,28 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
     {
         private readonly LoginService loginService;
         private readonly DrawObjectService drawObjectService;
+        private readonly CounterBox strokeWidth;
         private Line currentLine = default;
 
         public override string Name => "Pen";
 
-        public override Container Controls { get; } = new Panel();
+        public override Container Controls { get; } = new FlowPanel()
+        {
+            FlowDirection = ControlFlowDirection.SingleLeftToRight,
+        };
 
         public Pen(LoginService loginService, DrawObjectService drawObjectService)
         {
             this.loginService = loginService;
             this.drawObjectService = drawObjectService;
+
+            this.strokeWidth = new CounterBox()
+            {
+                MinValue = 1,
+                MaxValue = 20,
+                Value = 5,
+                Parent = this.Controls,
+            };
         }
 
         public override void OnUpdate(DrawContext context)
@@ -51,6 +63,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     currentLine.TimeStamp = System.DateTime.UtcNow;
                     currentLine.Id = System.Guid.NewGuid();
                     currentLine.Username = this.loginService.Name;
+                    currentLine.StrokeWidth = this.strokeWidth.Value;
 
                     this.drawObjectService.Add(new[] { currentLine }, false, default);
 
