@@ -41,6 +41,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 new Pen(this.loginService, this.drawObjectService),
                 new Eraser(this.loginService, this.drawObjectService),
+                new DrawTools.Image(),
             };
 
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));
@@ -64,11 +65,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
             void SetTool(Tool tool)
             {
-                this.tool?.Reset();
+                this.tool?.Deactivate();
 
                 this.toolControls.Children.Clear();
                 this.tool = tool;
-                this.tool.Reset();
+                this.tool.Activate();
                 this.tool.Controls.Parent = this.toolControls;
                 this.tool.Controls.Size = this.toolControls.ContentRegion.Size;
             }
@@ -104,6 +105,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 Parent = this,
                 BackgroundColor = Color.White,
+                ClipsBounds = true,
             };
 
             this.SetCanvasSize();
@@ -117,7 +119,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             this.LeftMouseButtonReleased += (s, e) =>
             {
                 this.leftMouseDown = false;
-                this.tool.Reset();
             };
         }
 
@@ -145,33 +146,10 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 this.tool.OnUpdate(new DrawContext()
                 {
-                    CanvasBounds = this.canvas.AbsoluteBounds,
+                    Canvas = this.canvas,
                     LeftMouseDown = this.leftMouseDown,
                     Mouse = GameService.Input.Mouse.Position,
                 });
-            }
-
-            if (GameService.Input.Keyboard.ActiveModifiers.HasFlag(Microsoft.Xna.Framework.Input.ModifierKeys.Ctrl) && GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.V))
-            {
-                var files = ClipboardUtil.WindowsClipboardService.GetFileDropListAsync().Result;
-
-                if (files?.Any() ?? false)
-                {
-                    var file = files.FirstOrDefault();
-                    if (!string.IsNullOrEmpty(file))
-                    {
-                        using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
-                        using var context = GameService.Graphics.LendGraphicsDeviceContext();
-                        this.clipboardTexture = Texture2D.FromStream(context.GraphicsDevice, fileStream);
-                    }
-                }
-
-                if (ClipboardHelper.TryGetPngData(out var buffer))
-                {
-                    using var memoryStream = new MemoryStream(buffer);
-                    using var context = GameService.Graphics.LendGraphicsDeviceContext();
-                    this.clipboardTexture = Texture2D.FromStream(context.GraphicsDevice, memoryStream);
-                }
             }
 
             base.UpdateContainer(gameTime);
@@ -202,11 +180,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            if (this.clipboardTexture != null)
-            {
-                spriteBatch.Draw(this.clipboardTexture, bounds, Color.White);
-            }
-
             var lines = this.drawObjectService.GetDrawObjects<Line>().Where(x => this.canvas.ContentRegion.Contains(x.Start.ToVector()) && this.canvas.ContentRegion.Contains(x.End.ToVector())).OrderBy(x => x.TimeStamp);
             foreach (var line in lines)
             {
@@ -217,7 +190,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), line.StrokeWidth);
             }
 
-            this.tool.Paint(spriteBatch);
+            this.tool.Paint(spriteBatch, bounds, this.canvas.AbsoluteBounds, this.SpriteBatchParameters);
 
             base.PaintAfterChildren(spriteBatch, bounds);
         }

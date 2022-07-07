@@ -148,7 +148,7 @@ namespace Denrage.AdventureModule
             var markerContainer = new MapMarkerContainer(this.drawObjectService);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
 
-            //var window = new ImageWindow(this.ContentsManager)
+            //var window2 = new ImageWindow(this.ContentsManager.GetTexture("testimage.jpg"))
             //{
             //    Parent = GraphicsService.Graphics.SpriteScreen,
             //    Width = 800,

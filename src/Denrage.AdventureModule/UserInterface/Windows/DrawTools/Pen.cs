@@ -34,7 +34,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
         public override void OnUpdate(DrawContext context)
         {
-            if (context.LeftMouseDown && context.CanvasBounds.Contains(context.Mouse.ToVector2()))
+            if (context.LeftMouseDown && context.Canvas.AbsoluteBounds.Contains(context.Mouse.ToVector2()))
             {
                 if (currentLine is null)
                 {
@@ -48,16 +48,16 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     };
                     currentLine.Start = new Vector2()
                     {
-                        X = context.Mouse.X - context.CanvasBounds.X,
-                        Y = context.Mouse.Y - context.CanvasBounds.Y,
+                        X = context.Mouse.X - context.Canvas.AbsoluteBounds.X,
+                        Y = context.Mouse.Y - context.Canvas.AbsoluteBounds.Y,
                     };
                 }
                 else if (currentLine.End is null)
                 {
                     currentLine.End = new Vector2()
                     {
-                        X = context.Mouse.X - context.CanvasBounds.X,
-                        Y = context.Mouse.Y - context.CanvasBounds.Y,
+                        X = context.Mouse.X - context.Canvas.AbsoluteBounds.X,
+                        Y = context.Mouse.Y - context.Canvas.AbsoluteBounds.Y,
                     };
 
                     currentLine.TimeStamp = System.DateTime.UtcNow;
@@ -82,9 +82,10 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
             }
         }
 
-        public override void Reset()
-        {
+        public override void Activate() => 
             this.currentLine = null;
-        }
+
+        public override void Deactivate() =>
+            this.currentLine = null;
     }
 }

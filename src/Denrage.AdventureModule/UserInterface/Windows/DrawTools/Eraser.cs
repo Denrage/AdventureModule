@@ -39,10 +39,10 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
         public override void OnUpdate(DrawContext context)
         {
-            if (context.LeftMouseDown && context.CanvasBounds.Contains(context.Mouse.ToVector2()))
+            if (context.LeftMouseDown && context.Canvas.AbsoluteBounds.Contains(context.Mouse.ToVector2()))
             {
-                var rectangleX = context.Mouse.X - this.eraserSize.Value - context.CanvasBounds.X;
-                var rectangleY = context.Mouse.Y - this.eraserSize.Value - context.CanvasBounds.Y;
+                var rectangleX = context.Mouse.X - this.eraserSize.Value - context.Canvas.AbsoluteBounds.X;
+                var rectangleY = context.Mouse.Y - this.eraserSize.Value - context.Canvas.AbsoluteBounds.Y;
                 var mouseArea = new Rectangle(rectangleX, rectangleY, this.eraserSize.Value * 2, this.eraserSize.Value * 2);
                 var linesToDelete = new List<Line>();
                 foreach (var line in this.drawObjectService.GetDrawObjects<Line>().Where(x => x.Username == this.loginService.Name))
@@ -58,7 +58,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
             }
         }
 
-        public override void Paint(SpriteBatch spriteBatch)
+        public override void Paint(SpriteBatch spriteBatch, Rectangle bounds, Rectangle canvasBounds, SpriteBatchParameters parameters)
         {
             var mouseX = GameService.Input.Mouse.Position.X;
             var mouseY = GameService.Input.Mouse.Position.Y;
