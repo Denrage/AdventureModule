@@ -15,7 +15,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
     public class Image : Tool
     {
         private readonly CounterBox imageIndex;
-        private readonly List<ImageWindow> images = new List<ImageWindow>();
+        private readonly List<ImageControl> images = new List<ImageControl>();
 
         private bool addingImage = false;
         private bool removeingImage = false;
@@ -52,7 +52,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                         {
                             using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
                             using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
-                            var image = new ImageWindow(Texture2D.FromStream(graphicContext.GraphicsDevice, fileStream))
+                            var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, fileStream))
                             {
                                 Parent = context.Canvas,
                             };
@@ -71,7 +71,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     {
                         using var memoryStream = new MemoryStream(buffer);
                         using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
-                        var image = new ImageWindow(Texture2D.FromStream(graphicContext.GraphicsDevice, memoryStream))
+                        var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, memoryStream))
                         {
                             Parent = context.Canvas,
                         };

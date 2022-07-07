@@ -11,9 +11,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Denrage.AdventureModule.UserInterface.Windows
+namespace Denrage.AdventureModule.UserInterface
 {
-    public class ImageWindow : Control
+    public class ImageControl : Control
     {
         private const int SCALE_STEP = 5;
         private readonly AsyncTexture2D texture;
@@ -71,7 +71,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         string debug = "";
 
-        public ImageWindow(AsyncTexture2D texture)
+        public ImageControl(AsyncTexture2D texture)
         {
             this.texture = texture;
             this.Width = 400;
@@ -193,7 +193,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 }
                 else
                 {
-                    this.Location = new Point(currentMousePosition.X - (this.AbsoluteBounds.Width / 2) - this.Parent.AbsoluteBounds.X, currentMousePosition.Y - (this.AbsoluteBounds.Height / 2) - this.Parent.AbsoluteBounds.Y);
+                    this.Location = new Point(currentMousePosition.X - this.AbsoluteBounds.Width / 2 - this.Parent.AbsoluteBounds.X, currentMousePosition.Y - this.AbsoluteBounds.Height / 2 - this.Parent.AbsoluteBounds.Y);
                 }
 
                 if (currentScrollWheelValue != 0 && this.AbsoluteBounds.Contains(currentMousePosition))
@@ -212,9 +212,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows
         {
             var texture = this.texture.Texture;
             // Scale
-            var scale = new Vector2((float)this.AbsoluteBounds.Width / (float)texture.Width, (float)this.AbsoluteBounds.Height / (float)texture.Height);
+            var scale = new Vector2(this.AbsoluteBounds.Width / (float)texture.Width, this.AbsoluteBounds.Height / (float)texture.Height);
 
-            var origin = new Vector2((float)texture.Width / 2f, (float)texture.Height / 2f);
+            var origin = new Vector2(texture.Width / 2f, texture.Height / 2f);
             var scaledOrigin = scale * origin;
             var destination = new Vector2(this.AbsoluteBounds.X, this.AbsoluteBounds.Y);
             destination.X += (int)scaledOrigin.X;

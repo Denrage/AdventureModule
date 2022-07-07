@@ -1,6 +1,9 @@
-﻿using Blish_HUD.Controls;
+﻿using Blish_HUD;
+using Blish_HUD._Extensions;
+using Blish_HUD.Controls;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
+using Microsoft.Xna.Framework;
 
 namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 {
@@ -9,6 +12,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
         private readonly LoginService loginService;
         private readonly DrawObjectService drawObjectService;
         private readonly CounterBox strokeWidth;
+        private readonly ColorBox colorBox;
         private Line currentLine = default;
 
         public override string Name => "Pen";
@@ -30,23 +34,43 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                 Value = 5,
                 Parent = this.Controls,
             };
+
+            this.colorBox = new ColorBox()
+            {
+                Parent = this.Controls,
+            };
+
+            this.colorBox.Click += (s, e) =>
+            {
+                var test = new ColorPickerPopup()
+                {
+                    Parent = GraphicsService.Graphics.SpriteScreen,
+                    Width = 800,
+                    Height = 600,
+                };
+
+                test.Initialize(this.colorBox);
+                test.Show();
+            };
         }
 
         public override void OnUpdate(DrawContext context)
         {
             if (context.LeftMouseDown && context.Canvas.AbsoluteBounds.Contains(context.Mouse.ToVector2()))
             {
+                var color = this.colorBox.Color?.Cloth?.ToXnaColor() ?? Color.Black;
+                
                 if (currentLine is null)
                 {
                     currentLine = new Line();
                     currentLine.LineColor = new Line.Color()
                     {
-                        A = 255,
-                        B = 0,
-                        G = 0,
-                        R = 0,
+                        A = color.A,
+                        B = color.B,
+                        G = color.G,
+                        R = color.R,
                     };
-                    currentLine.Start = new Vector2()
+                    currentLine.Start = new Libs.Messages.Data.Vector2()
                     {
                         X = context.Mouse.X - context.Canvas.AbsoluteBounds.X,
                         Y = context.Mouse.Y - context.Canvas.AbsoluteBounds.Y,
@@ -54,7 +78,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                 }
                 else if (currentLine.End is null)
                 {
-                    currentLine.End = new Vector2()
+                    currentLine.End = new Libs.Messages.Data.Vector2()
                     {
                         X = context.Mouse.X - context.Canvas.AbsoluteBounds.X,
                         Y = context.Mouse.Y - context.Canvas.AbsoluteBounds.Y,
@@ -71,14 +95,18 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     {
                         LineColor = new Line.Color()
                         {
-                            A = 255,
-                            B = 0,
-                            G = 0,
-                            R = 0,
+                            A = color.A,
+                            B = color.B,
+                            G = color.G,
+                            R = color.R,
                         },
-                        Start = new Vector2() { X = currentLine.End.X, Y = currentLine.End.Y },
+                        Start = new Libs.Messages.Data.Vector2() { X = currentLine.End.X, Y = currentLine.End.Y },
                     };
                 }
+            }
+            else
+            {
+                currentLine = null;
             }
         }
 
