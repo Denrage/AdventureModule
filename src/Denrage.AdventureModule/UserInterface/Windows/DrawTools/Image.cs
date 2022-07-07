@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Denrage.AdventureModule.Helper;
+using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,8 +16,10 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
     public class Image : Tool
     {
         private readonly CounterBox imageIndex;
-        private readonly List<ImageControl> images = new List<ImageControl>();
-
+        private readonly Dictionary<Guid, ImageControl> imageControls = new Dictionary<Guid, ImageControl>();
+        private readonly LoginService loginService;
+        private readonly DrawObjectService drawObjectService;
+        private bool isActive = false;
         private bool addingImage = false;
         private bool removeingImage = false;
 
@@ -24,7 +27,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
         public override Container Controls { get; } = new FlowPanel();
 
-        public Image()
+        public Image(LoginService loginService, DrawObjectService drawObjectService)
         {
             this.imageIndex = new CounterBox()
             {
@@ -33,114 +36,146 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                 Value = 0,
                 Parent = this.Controls,
             };
+            this.loginService = loginService;
+            this.drawObjectService = drawObjectService;
+        }
+
+        private ImageControl CreateImageControl(DrawContext context, Libs.Messages.Data.Image serverImage)
+        {
+            using var memoryStream = new MemoryStream(serverImage.Data);
+            using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
+            var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, memoryStream))
+            {
+                Parent = context.Canvas,
+                Enabled = false,
+            };
+
+            image.Location = new Point(context.Canvas.LocalBounds.Center.X - (image.Width / 2), context.Canvas.LocalBounds.Center.Y - (image.Height / 2));
+
+            return image;
+        }
+
+        private void AddImage(byte[] data)
+        {
+            var serverImage = new Libs.Messages.Data.Image() { Data = data, Username = this.loginService.Name, Id = Guid.NewGuid() };
+            this.drawObjectService.Add(new[] { serverImage }, false, default);
+        }
+
+        private void RemoveImage()
+        {
+            var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>();
+            var ownImages = images.Where(x => x.Username == this.loginService.Name).ToArray();
+            var image = ownImages[this.imageIndex.Value];
+            this.drawObjectService.Remove<Libs.Messages.Data.Image>(new[] { image.Id }, false, default);
         }
 
         public override void OnUpdate(DrawContext context)
         {
-            if (GameService.Input.Keyboard.ActiveModifiers.HasFlag(Microsoft.Xna.Framework.Input.ModifierKeys.Ctrl) && GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.V))
+            if (this.isActive)
             {
-                if (!addingImage)
+
+                if (GameService.Input.Keyboard.ActiveModifiers.HasFlag(Microsoft.Xna.Framework.Input.ModifierKeys.Ctrl) && GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.V))
                 {
-                    addingImage = true;
-
-                    var files = ClipboardUtil.WindowsClipboardService.GetFileDropListAsync().Result;
-
-                    if (files?.Any() ?? false)
+                    if (!addingImage)
                     {
-                        var file = files.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(file))
-                        {
-                            using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
-                            using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
-                            var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, fileStream))
-                            {
-                                Parent = context.Canvas,
-                            };
+                        addingImage = true;
 
-                            image.Location = new Point(context.Canvas.LocalBounds.Center.X - (image.Width / 2), context.Canvas.LocalBounds.Center.Y - (image.Height / 2));
-                            this.images.Add(image);
-                            if (this.images.Count != 1)
+                        var files = ClipboardUtil.WindowsClipboardService.GetFileDropListAsync().Result;
+
+                        if (files?.Any() ?? false)
+                        {
+                            var file = files.FirstOrDefault();
+                            if (!string.IsNullOrEmpty(file))
                             {
-                                this.imageIndex.MaxValue++;
-                                this.imageIndex.Value = this.imageIndex.MaxValue;
+                                using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                                using var memoryStream = new MemoryStream();
+                                fileStream.CopyTo(memoryStream);
+                                this.AddImage(memoryStream.ToArray());
                             }
                         }
-                    }
 
-                    if (ClipboardHelper.TryGetPngData(out var buffer))
-                    {
-                        using var memoryStream = new MemoryStream(buffer);
-                        using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
-                        var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, memoryStream))
+                        if (ClipboardHelper.TryGetPngData(out var buffer))
                         {
-                            Parent = context.Canvas,
-                        };
-
-                        image.Location = new Point(context.Canvas.LocalBounds.Center.X - (image.Width / 2), context.Canvas.LocalBounds.Center.Y - (image.Height / 2));
-
-                        this.images.Add(image);
-                        if (this.images.Count != 1)
-                        {
-                            this.imageIndex.MaxValue++;
-                            this.imageIndex.Value = this.imageIndex.MaxValue;
+                            this.AddImage(buffer);
                         }
                     }
                 }
-            }
-            else
-            {
-                addingImage = false;
-            }
-
-            if (GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.Delete))
-            {
-                if (!removeingImage)
+                else
                 {
-                    removeingImage = true;
-                    var currentImage = this.images[this.imageIndex.Value];
-                    currentImage.Dispose();
-                    _ = this.images.Remove(currentImage);
-
-                    if (this.imageIndex.Value > 0)
-                    {
-                        this.imageIndex.Value--;
-                    }
-
-                    if (this.imageIndex.MaxValue > 0)
-                    {
-                        this.imageIndex.MaxValue--;
-                    }
-                }
-            }
-            else
-            {
-                removeingImage = false;
-            }
-
-            if (this.images.Any())
-            {
-                foreach (var item in this.images)
-                {
-                    item.Enabled = false;
+                    addingImage = false;
                 }
 
-                this.images[this.imageIndex.Value].Enabled = true;
+                if (GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.Delete))
+                {
+                    if (!removeingImage)
+                    {
+                        removeingImage = true;
+                        this.RemoveImage();
+                    }
+                }
+                else
+                {
+                    removeingImage = false;
+                }
+
+                var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>();
+
+                foreach (var item in images)
+                {
+                    if (!this.imageControls.ContainsKey(item.Id))
+                    {
+                        this.imageControls[item.Id] = this.CreateImageControl(context, item);
+                    }
+                }
+
+                var toRemove = new List<Guid>();
+
+                foreach (var item in this.imageControls)
+                {
+                    if (!images.Select(x => x.Id).Contains(item.Key))
+                    {
+                        toRemove.Add(item.Key);
+                    }
+                }
+
+                foreach (var item in toRemove)
+                {
+                    this.imageControls[item].Dispose();
+                    _ = this.imageControls.Remove(item);
+                }
+
+                var ownImages = images.Where(x => x.Username == this.loginService.Name).ToArray();
+
+                if (ownImages.Length > 0)
+                {
+                    this.imageIndex.MaxValue = ownImages.Length - 1;
+                    if (this.imageIndex.Value > this.imageIndex.MaxValue)
+                    {
+                        this.imageIndex.Value = this.imageIndex.MaxValue;
+                    }
+
+                    foreach (var item in ownImages)
+                    {
+                        var imageControl = this.imageControls[item.Id];
+                        imageControl.Enabled = false;
+                    }
+
+                    this.imageControls[ownImages[this.imageIndex.Value].Id].Enabled = true;
+                }
             }
         }
 
         public override void Activate()
         {
-            if (this.images.Any())
-            {
-                this.images[this.imageIndex.Value].Enabled = true;
-            }
+            this.isActive = true;
         }
 
         public override void Deactivate()
         {
-            foreach (var item in this.images)
+            this.isActive = false;
+            foreach (var item in this.imageControls)
             {
-                item.Enabled = false;
+                item.Value.Enabled = false;
             }
         }
     }

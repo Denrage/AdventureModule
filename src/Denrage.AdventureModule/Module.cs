@@ -50,6 +50,7 @@ namespace Denrage.AdventureModule
             this.drawObjectService = new DrawObjectService(this.tcpService);
             this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
             this.drawObjectService.Register<Libs.Messages.Data.MapMarker, AddDrawObjectMessage<Libs.Messages.Data.MapMarker>, RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>>(marker => new AddDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() }, ids => new RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>() { Ids = ids.ToArray() });
+            this.drawObjectService.Register<Libs.Messages.Data.Image, AddDrawObjectMessage<Libs.Messages.Data.Image>, RemoveDrawObjectMessage<Libs.Messages.Data.Image>>(marker => new AddDrawObjectMessage<Libs.Messages.Data.Image>() { DrawObjects = marker.ToArray() }, ids => new RemoveDrawObjectMessage<Libs.Messages.Data.Image>() { Ids = ids.ToArray() });
         }
 
         protected override void DefineSettings(SettingCollection settings)

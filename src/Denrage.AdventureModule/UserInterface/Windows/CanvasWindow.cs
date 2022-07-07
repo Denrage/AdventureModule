@@ -41,7 +41,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 new Pen(this.loginService, this.drawObjectService),
                 new Eraser(this.loginService, this.drawObjectService),
-                new DrawTools.Image(),
+                new DrawTools.Image(this.loginService, this.drawObjectService),
             };
 
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));

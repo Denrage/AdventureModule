@@ -33,6 +33,8 @@ namespace Denrage.AdventureModule.Services
                 { typeof(RemoveDrawObjectMessage<Line>).FullName, (typeof(RemoveDrawObjectMessage<Line>), new RemoveDrawObjectMessageHandler<Line>(drawObjectService)) },
                 { typeof(AddDrawObjectMessage<MapMarker>).FullName, (typeof(AddDrawObjectMessage<MapMarker>), new AddDrawObjectMessageHandler<MapMarker>(drawObjectService)) },
                 { typeof(RemoveDrawObjectMessage<MapMarker>).FullName, (typeof(RemoveDrawObjectMessage<MapMarker>), new RemoveDrawObjectMessageHandler<MapMarker>(drawObjectService)) },
+                { typeof(AddDrawObjectMessage<Image>).FullName, (typeof(AddDrawObjectMessage<Image>), new AddDrawObjectMessageHandler<Image>(drawObjectService)) },
+                { typeof(RemoveDrawObjectMessage<Image>).FullName, (typeof(RemoveDrawObjectMessage<Image>), new RemoveDrawObjectMessageHandler<Image>(drawObjectService)) },
                 { typeof(PlayersMumbleMessage).FullName, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).FullName, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).FullName, (typeof(LoginResponseMessage), null) },

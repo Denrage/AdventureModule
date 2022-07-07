@@ -28,6 +28,8 @@ public class TcpService : IDisposable
             { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
             { typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>), new AddDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
             { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
+            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Image>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Image>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Image>(getDrawObjectService)) },
+            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Image>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Image>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Image>(getDrawObjectService)) },
             { typeof(PlayerMumbleMessage).FullName, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
             { typeof(PingMessage).FullName, (typeof(PingMessage), new PingMessageHandler(this)) },
             { typeof(LoginMessage).FullName, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
