@@ -61,6 +61,8 @@ namespace Denrage.AdventureModule.UserInterface
             }
         };
 
+        private readonly Size defaultSize;
+
         private bool rightMouseDown;
         private bool leftMouseDown;
         private Vector2 currentScale;
@@ -69,13 +71,42 @@ namespace Denrage.AdventureModule.UserInterface
         private bool currrentlyMoving = false;
         private float opacity = 1f;
 
-        string debug = "";
+        public float Rotation
+        {
+            get => this.rotation;
+            set
+            {
+                if (this.rotation != value)
+                {
+                    this.rotation = value;
+                    this.RotationChanged?.Invoke(value);
+                }
+            }
+        }
+
+        public float Opactiy
+        {
+            get => this.opacity;
+            set
+            {
+                if (this.opacity != value)
+                {
+                    this.opacity = value;
+                    this.OpacityChanged?.Invoke(value);
+                }
+            }
+        }
+
+        public event Action<float> RotationChanged;
+        public event Action<float> OpacityChanged;
 
         public ImageControl(AsyncTexture2D texture)
         {
             this.texture = texture;
             this.Width = 400;
             this.Height = 400;
+
+            this.defaultSize = this.Size;
             this.ClipsBounds = false;
             GameService.Input.Mouse.LeftMouseButtonPressed += (s, e) => this.leftMouseDown = true;
             GameService.Input.Mouse.LeftMouseButtonReleased += (s, e) =>
@@ -128,7 +159,7 @@ namespace Denrage.AdventureModule.UserInterface
                                         Math.Atan2(
                                             lastMousePosition.Y - this.AbsoluteBounds.Center.Y,
                                             lastMousePosition.X - this.AbsoluteBounds.Center.X);
-                                    this.rotation += (float)angle;
+                                    this.Rotation += (float)angle;
                                 }
                             }
                         }
@@ -201,6 +232,7 @@ namespace Denrage.AdventureModule.UserInterface
                     this.opacity += Math.Sign(currentScrollWheelValue) * 0.10f;
 
                     this.opacity = MathHelper.Clamp(this.opacity, 0f, 1f);
+                    this.OpacityChanged?.Invoke(this.opacity);
                 }
             }
 
@@ -224,7 +256,7 @@ namespace Denrage.AdventureModule.UserInterface
             var color = Color.White * this.opacity;
 
             // Rotation
-            spriteBatch.Draw(texture, destination, null, color, this.rotation, origin, scale, SpriteEffects.None, 0);
+            spriteBatch.Draw(texture, destination, null, color, this.Rotation, origin, scale, SpriteEffects.None, 0);
 
             if (this.Enabled)
             {

@@ -16,9 +16,9 @@ namespace MyApp // Note: actual namespace depends on the project name.
             var userManagementService = new UserManagementService();
             service = new TcpService(() => drawObjectService, userManagementService, () => playerMumbleService);
             drawObjectService = new DrawObjectService(service, userManagementService);
-            drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() });
-            drawObjectService.Register<MapMarker, AddDrawObjectMessage<MapMarker>, RemoveDrawObjectMessage<MapMarker>>(markers => new AddDrawObjectMessage<MapMarker>() { DrawObjects = markers.ToArray() }, ids => new RemoveDrawObjectMessage<MapMarker>() { Ids = ids.ToArray() });
-            drawObjectService.Register<Image, AddDrawObjectMessage<Image>, RemoveDrawObjectMessage<Image>>(marker => new AddDrawObjectMessage<Image>() { DrawObjects = marker.ToArray() }, ids => new RemoveDrawObjectMessage<Image>() { Ids = ids.ToArray() });
+            drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>, UpdateDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() }, lines => new UpdateDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() });
+            drawObjectService.Register<MapMarker, AddDrawObjectMessage<MapMarker>, RemoveDrawObjectMessage<MapMarker>, UpdateDrawObjectMessage<MapMarker>>(markers => new AddDrawObjectMessage<MapMarker>() { DrawObjects = markers.ToArray() }, ids => new RemoveDrawObjectMessage<MapMarker>() { Ids = ids.ToArray() }, markers => new UpdateDrawObjectMessage<MapMarker>() { DrawObjects = markers.ToArray() });
+            drawObjectService.Register<Image, AddDrawObjectMessage<Image>, RemoveDrawObjectMessage<Image>, UpdateDrawObjectMessage<Image>>(images => new AddDrawObjectMessage<Image>() { DrawObjects = images.ToArray() }, ids => new RemoveDrawObjectMessage<Image>() { Ids = ids.ToArray() }, images => new UpdateDrawObjectMessage<Image>() { DrawObjects = images.ToArray() });
             playerMumbleService = new PlayerMumbleService(service, userManagementService);
             service.Initialize().Wait();
 

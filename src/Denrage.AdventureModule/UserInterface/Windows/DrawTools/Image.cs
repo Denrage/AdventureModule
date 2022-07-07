@@ -42,6 +42,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
         private ImageControl CreateImageControl(DrawContext context, Libs.Messages.Data.Image serverImage)
         {
+            var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>();
+            var ownImages = images.Where(x => x.Username == this.loginService.Name).ToArray();
             using var memoryStream = new MemoryStream(serverImage.Data);
             using var graphicContext = GameService.Graphics.LendGraphicsDeviceContext();
             var image = new ImageControl(Texture2D.FromStream(graphicContext.GraphicsDevice, memoryStream))
@@ -52,12 +54,36 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
             image.Location = new Point(context.Canvas.LocalBounds.Center.X - (image.Width / 2), context.Canvas.LocalBounds.Center.Y - (image.Height / 2));
 
+            if (ownImages.Select(x => x.Id).Contains(serverImage.Id))
+            {
+                image.Moved += (s, e) => 
+                {
+                    serverImage.Location = new Libs.Messages.Data.Vector2() { X = e.CurrentLocation.X, Y = e.CurrentLocation.Y };
+                    this.drawObjectService.Update(new[] { serverImage }, false, default); 
+                };
+                image.Resized += (s, e) => 
+                {
+                    serverImage.Size = new Libs.Messages.Data.Vector2() { X = e.CurrentSize.X, Y = e.CurrentSize.Y };
+                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                };
+                image.OpacityChanged += opacity =>
+                {
+                    serverImage.Opacity = opacity;
+                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                };
+                image.RotationChanged += rotation =>
+                {
+                    serverImage.Rotation = rotation;
+                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                };
+            }
+
             return image;
         }
 
-        private void AddImage(byte[] data)
+        private void AddImage(byte[] data, DrawContext context)
         {
-            var serverImage = new Libs.Messages.Data.Image() { Data = data, Username = this.loginService.Name, Id = Guid.NewGuid() };
+            var serverImage = new Libs.Messages.Data.Image() { Data = data, Username = this.loginService.Name, Id = Guid.NewGuid(), Location = new Libs.Messages.Data.Vector2 { X = context.Canvas.LocalBounds.Center.X - (400 / 2), Y = context.Canvas.LocalBounds.Center.Y - (400 / 2) }, Opacity = 1f, Rotation = 0f, Size = new Libs.Messages.Data.Vector2() { X = 400, Y = 400 } };
             this.drawObjectService.Add(new[] { serverImage }, false, default);
         }
 
@@ -90,13 +116,13 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                                 using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
                                 using var memoryStream = new MemoryStream();
                                 fileStream.CopyTo(memoryStream);
-                                this.AddImage(memoryStream.ToArray());
+                                this.AddImage(memoryStream.ToArray(), context);
                             }
                         }
 
                         if (ClipboardHelper.TryGetPngData(out var buffer))
                         {
-                            this.AddImage(buffer);
+                            this.AddImage(buffer, context);
                         }
                     }
                 }
@@ -118,6 +144,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     removeingImage = false;
                 }
 
+                // TODO: Make everything below here more efficient and move some things to the canvas. It's more than enough to not do it on every update and skip a few cycles
+
                 var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>();
 
                 foreach (var item in images)
@@ -136,6 +164,15 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     {
                         toRemove.Add(item.Key);
                     }
+                }
+
+                foreach (var item in images.Where(x => x.Username != this.loginService.Name))
+                {
+                    var imageControl = this.imageControls[item.Id];
+                    imageControl.Size = new Point((int)item.Size.X, (int)item.Size.Y);
+                    imageControl.Location = new Point((int)item.Location.X, (int)item.Location.Y);
+                    imageControl.Rotation = item.Rotation;
+                    imageControl.Opacity = item.Opacity;
                 }
 
                 foreach (var item in toRemove)

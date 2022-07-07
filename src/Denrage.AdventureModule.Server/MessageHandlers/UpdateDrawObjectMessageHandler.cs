@@ -5,18 +5,18 @@ using Denrage.AdventureModule.Server.Services;
 
 namespace Denrage.AdventureModule.Server.MessageHandlers;
 
-public class AddDrawObjectMessageHandler<TDrawObject> : MessageHandler<AddDrawObjectMessage<TDrawObject>>
+public class UpdateDrawObjectMessageHandler<TDrawObject> : MessageHandler<UpdateDrawObjectMessage<TDrawObject>>
     where TDrawObject : DrawObject
 {
     private readonly Func<DrawObjectService> getDrawObjectService;
 
-    public AddDrawObjectMessageHandler(Func<DrawObjectService> getDrawObjectService)
+    public UpdateDrawObjectMessageHandler(Func<DrawObjectService> getDrawObjectService)
     {
         this.getDrawObjectService = getDrawObjectService;
     }
 
-    protected override async Task Handle(Guid clientId, AddDrawObjectMessage<TDrawObject> message, CancellationToken ct)
+    protected override async Task Handle(Guid clientId, UpdateDrawObjectMessage<TDrawObject> message, CancellationToken ct)
     {
-        await this.getDrawObjectService().Add(message.DrawObjects, clientId, ct);
+        await this.getDrawObjectService().Update(message.DrawObjects, clientId, ct);
     }
 }

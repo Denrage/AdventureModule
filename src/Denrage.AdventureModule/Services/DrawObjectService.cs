@@ -12,7 +12,7 @@ namespace Denrage.AdventureModule.Services
     public class DrawObjectService
     {
         private ConcurrentDictionary<Type, ConcurrentDictionary<Guid, DrawObject>> drawObjects = new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, DrawObject>>();
-        private Dictionary<Type, (Func<IEnumerable<object>, Message> AddMessage, Func<IEnumerable<Guid>, Message> RemoveMessage)> drawObjectTypeToMessageType = new Dictionary<Type, (Func<IEnumerable<object>, Message> AddMessage, Func<IEnumerable<Guid>, Message> RemoveMessage)>();
+        private Dictionary<Type, (Func<IEnumerable<object>, Message> AddMessage, Func<IEnumerable<Guid>, Message> RemoveMessage, Func<IEnumerable<object>, Message> UpdateMessage)> drawObjectTypeToMessageType = new Dictionary<Type, (Func<IEnumerable<object>, Message> AddMessage, Func<IEnumerable<Guid>, Message> RemoveMessage, Func<IEnumerable<object>, Message> UpdateMessage)>();
         private readonly TcpService tcpService;
 
         public DrawObjectService(TcpService tcpService)
@@ -20,13 +20,14 @@ namespace Denrage.AdventureModule.Services
             this.tcpService = tcpService;
         }
 
-        public void Register<T, TAddMessage, TRemoveMessage>(Func<IEnumerable<T>, TAddMessage> addMessage, Func<IEnumerable<Guid>, TRemoveMessage> removeMessage)
+        public void Register<T, TAddMessage, TRemoveMessage, TUpdateMessage>(Func<IEnumerable<T>, TAddMessage> addMessage, Func<IEnumerable<Guid>, TRemoveMessage> removeMessage, Func<IEnumerable<T>, TUpdateMessage> updateMessage)
             where T : DrawObject
             where TAddMessage : AddDrawObjectMessage<T>
             where TRemoveMessage : RemoveDrawObjectMessage<T>
+            where TUpdateMessage : UpdateDrawObjectMessage<T>
         {
             this.drawObjects.TryAdd(typeof(T), new ConcurrentDictionary<Guid, DrawObject>());
-            this.drawObjectTypeToMessageType.Add(typeof(T), (items => addMessage(items.Cast<T>()), ids => removeMessage(ids)));
+            this.drawObjectTypeToMessageType.Add(typeof(T), (items => addMessage(items.Cast<T>()), ids => removeMessage(ids), items => updateMessage(items.Cast<T>())));
         }
 
         public async Task Add<T>(IEnumerable<T> drawObjects, bool fromServer, CancellationToken ct)
@@ -70,6 +71,28 @@ namespace Denrage.AdventureModule.Services
                 if (!fromServer)
                 {
                     await this.tcpService.Send(this.drawObjectTypeToMessageType[typeof(T)].RemoveMessage(drawObject), ct);
+                }
+            }
+        }
+
+        public async Task Update<T>(IEnumerable<T> drawObjects, bool fromServer, CancellationToken ct)
+            where T : DrawObject
+        {
+            if (drawObjects is null)
+            {
+                return;
+            }
+
+            if (this.drawObjects.TryGetValue(typeof(T), out var objects))
+            {
+                foreach (var item in drawObjects)
+                {
+                    objects[item.Id] = item;
+                }
+
+                if (!fromServer)
+                {
+                    await this.tcpService.Send(this.drawObjectTypeToMessageType[typeof(T)].UpdateMessage(drawObjects), ct);
                 }
             }
         }
