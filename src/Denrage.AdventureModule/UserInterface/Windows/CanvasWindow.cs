@@ -8,7 +8,10 @@ using Denrage.AdventureModule.UserInterface.Windows.DrawTools;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +29,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows
         private bool? finishedResize;
         private FlowPanel toolbar;
         private Tool tool;
+
+        private Texture2D clipboardTexture;
 
         public void Initialize(DrawObjectService drawObjectService, LoginService loginService)
         {
@@ -49,7 +54,26 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 Parent = this,
             };
 
-            this.tool = this.tools[0];
+            this.toolControls = new Panel()
+            {
+                Height = 40,
+                Width = this.ContentRegion.Width,
+                Parent = this,
+                Location = new Point(0, this.toolbar.Location.Y + this.toolbar.Height),
+            };
+
+            void SetTool(Tool tool)
+            {
+                this.tool?.Reset();
+
+                this.toolControls.Children.Clear();
+                this.tool = tool;
+                this.tool.Reset();
+                this.tool.Controls.Parent = this.toolControls;
+                this.tool.Controls.Size = this.toolControls.ContentRegion.Size;
+            }
+
+            SetTool(this.tools[0]);
             foreach (var tool in this.tools)
             {
                 var button = new StandardButton()
@@ -65,29 +89,16 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
                 button.Click += (s, e) =>
                 {
-                    this.tool.Reset();
-
                     foreach (var item in this.toolbar)
                     {
                         item.Enabled = true;
                     }
 
-                    this.toolControls.Children.Clear();
-                    this.tool = tool;
-                    this.tool.Reset();
+                    SetTool(tool);
+
                     button.Enabled = false;
-                    this.tool.Controls.Parent = this.toolControls;
-                    this.tool.Controls.Size = this.toolControls.ContentRegion.Size;
                 };
             }
-
-            this.toolControls = new Panel()
-            {
-                Height = 40,
-                Width = this.ContentRegion.Width,
-                Parent = this,
-                Location = new Point(0, this.toolbar.Location.Y + this.toolbar.Height),
-            };
 
             this.canvas = new Panel()
             {
@@ -140,9 +151,32 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 });
             }
 
+            if (GameService.Input.Keyboard.ActiveModifiers.HasFlag(Microsoft.Xna.Framework.Input.ModifierKeys.Ctrl) && GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.V))
+            {
+                var files = ClipboardUtil.WindowsClipboardService.GetFileDropListAsync().Result;
+
+                if (files?.Any() ?? false)
+                {
+                    var file = files.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(file))
+                    {
+                        using var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read);
+                        using var context = GameService.Graphics.LendGraphicsDeviceContext();
+                        this.clipboardTexture = Texture2D.FromStream(context.GraphicsDevice, fileStream);
+                    }
+                }
+
+                if (ClipboardHelper.TryGetPngData(out var buffer))
+                {
+                    using var memoryStream = new MemoryStream(buffer);
+                    using var context = GameService.Graphics.LendGraphicsDeviceContext();
+                    this.clipboardTexture = Texture2D.FromStream(context.GraphicsDevice, memoryStream);
+                }
+            }
+
             base.UpdateContainer(gameTime);
         }
-
+        
         protected override void OnResized(ResizedEventArgs e)
         {
             base.OnResized(e);
@@ -168,6 +202,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
+            if (this.clipboardTexture != null)
+            {
+                spriteBatch.Draw(this.clipboardTexture, bounds, Color.White);
+            }
+
             var lines = this.drawObjectService.GetDrawObjects<Line>().Where(x => this.canvas.ContentRegion.Contains(x.Start.ToVector()) && this.canvas.ContentRegion.Contains(x.End.ToVector())).OrderBy(x => x.TimeStamp);
             foreach (var line in lines)
             {
