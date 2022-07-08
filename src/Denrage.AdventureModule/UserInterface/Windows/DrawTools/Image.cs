@@ -56,12 +56,12 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
             if (ownImages.Select(x => x.Id).Contains(serverImage.Id))
             {
-                image.Moved += (s, e) => 
+                image.Moved += (s, e) =>
                 {
                     serverImage.Location = new Libs.Messages.Data.Vector2() { X = e.CurrentLocation.X, Y = e.CurrentLocation.Y };
-                    this.drawObjectService.Update(new[] { serverImage }, false, default); 
+                    this.drawObjectService.Update(new[] { serverImage }, false, default);
                 };
-                image.Resized += (s, e) => 
+                image.Resized += (s, e) =>
                 {
                     serverImage.Size = new Libs.Messages.Data.Vector2() { X = e.CurrentSize.X, Y = e.CurrentSize.Y };
                     this.drawObjectService.Update(new[] { serverImage }, false, default);
@@ -95,7 +95,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
             this.drawObjectService.Remove<Libs.Messages.Data.Image>(new[] { image.Id }, false, default);
         }
 
-        public override void OnUpdate(DrawContext context)
+        public override void OnUpdateActive(DrawContext context)
         {
             if (this.isActive)
             {
@@ -143,10 +143,16 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                 {
                     removeingImage = false;
                 }
+            }
+        }
 
-                // TODO: Make everything below here more efficient and move some things to the canvas. It's more than enough to not do it on every update and skip a few cycles
+        private double previousGameTime;
 
-                var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>();
+        public override void OnUpdateAlways(DrawContext context, GameTime gameTime)
+        {
+            if (gameTime.TotalGameTime.TotalMilliseconds - previousGameTime > 20)
+            {
+                var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>().ToArray();
 
                 foreach (var item in images)
                 {
@@ -199,6 +205,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
                     this.imageControls[ownImages[this.imageIndex.Value].Id].Enabled = true;
                 }
+
+                this.previousGameTime = gameTime.TotalGameTime.TotalMilliseconds;
             }
         }
 

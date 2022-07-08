@@ -7,7 +7,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 {
     public abstract class Tool
     {
-        public abstract void OnUpdate(DrawContext context);
+        public abstract void OnUpdateActive(DrawContext context);
+
+        public virtual void OnUpdateAlways(DrawContext context, GameTime gameTime) { }
 
         public abstract string Name { get; }
 

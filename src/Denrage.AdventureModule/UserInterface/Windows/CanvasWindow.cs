@@ -144,12 +144,19 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
             if (this.tool != null && !this.Dragging && !this.Resizing)
             {
-                this.tool.OnUpdate(new DrawContext()
+                var drawContext = new DrawContext()
                 {
                     Canvas = this.canvas,
                     LeftMouseDown = this.leftMouseDown,
                     Mouse = GameService.Input.Mouse.Position,
-                });
+                };
+
+                this.tool.OnUpdateActive(drawContext);
+
+                foreach (var item in this.tools)
+                {
+                    item.OnUpdateAlways(drawContext, gameTime);
+                }
             }
 
             base.UpdateContainer(gameTime);

@@ -54,7 +54,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
             };
         }
 
-        public override void OnUpdate(DrawContext context)
+        public override void OnUpdateActive(DrawContext context)
         {
             if (context.LeftMouseDown && context.Canvas.AbsoluteBounds.Contains(context.Mouse.ToVector2()))
             {

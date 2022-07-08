@@ -15,7 +15,6 @@ public class PingMessageHandler : MessageHandler<PingMessage>
 
     protected override async Task Handle(Guid clientId, PingMessage message, CancellationToken ct)
     {
-        Console.WriteLine("Got Ping, sending ping back");
         await this.tcpService.SendMessage(clientId, new PingResponseMessage() { Id = message.Id }, ct);
     }
 }
