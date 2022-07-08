@@ -21,7 +21,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
         private readonly DrawObjectService drawObjectService;
         private bool isActive = false;
         private bool addingImage = false;
-        private bool removeingImage = false;
+        private bool removingImage = false;
 
         public override string Name => "Image";
 
@@ -133,15 +133,15 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
                 if (GameService.Input.Keyboard.KeysDown.Contains(Microsoft.Xna.Framework.Input.Keys.Delete))
                 {
-                    if (!removeingImage)
+                    if (!removingImage)
                     {
-                        removeingImage = true;
+                        removingImage = true;
                         this.RemoveImage();
                     }
                 }
                 else
                 {
-                    removeingImage = false;
+                    removingImage = false;
                 }
             }
         }
