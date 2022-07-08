@@ -48,9 +48,56 @@ namespace Denrage.AdventureModule
             this.loginService = new LoginService(this.tcpService);
             this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService);
             this.drawObjectService = new DrawObjectService(this.tcpService);
-            this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>, UpdateDrawObjectMessage<Line>>(lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() }, lines => new UpdateDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() });
-            this.drawObjectService.Register<Libs.Messages.Data.MapMarker, AddDrawObjectMessage<Libs.Messages.Data.MapMarker>, RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>, UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>>(marker => new AddDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() }, ids => new RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>() { Ids = ids.ToArray() }, marker => new UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() });
-            this.drawObjectService.Register<Libs.Messages.Data.Image, AddDrawObjectMessage<Libs.Messages.Data.Image>, RemoveDrawObjectMessage<Libs.Messages.Data.Image>, UpdateDrawObjectMessage<Libs.Messages.Data.Image>>(images => new AddDrawObjectMessage<Libs.Messages.Data.Image>() { DrawObjects = images.ToArray() }, ids => new RemoveDrawObjectMessage<Libs.Messages.Data.Image>() { Ids = ids.ToArray() }, images => new UpdateDrawObjectMessage<Libs.Messages.Data.Image>() { DrawObjects = images.ToArray() });
+            
+            this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>, UpdateDrawObjectMessage<Line>>(
+                lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, 
+                ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() }, 
+                lines => new UpdateDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() },
+                (oldObject, newObject) =>
+                {
+                    oldObject.Start = newObject.Start;
+                    oldObject.End = newObject.End;
+                    oldObject.LineColor = newObject.LineColor;
+                    oldObject.TimeStamp = newObject.TimeStamp;
+                });
+            
+            this.drawObjectService.Register<Libs.Messages.Data.MapMarker, AddDrawObjectMessage<Libs.Messages.Data.MapMarker>, RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>, UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>>(
+                marker => new AddDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() }, 
+                ids => new RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>() { Ids = ids.ToArray() }, 
+                marker => new UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() },
+                (oldObject, newObject) => oldObject.Position = newObject.Position);
+
+            this.drawObjectService.Register<Libs.Messages.Data.Image, AddDrawObjectMessage<Libs.Messages.Data.Image>, RemoveDrawObjectMessage<Libs.Messages.Data.Image>, UpdateDrawObjectMessage<Libs.Messages.Data.Image>>(
+                images => new AddDrawObjectMessage<Libs.Messages.Data.Image>() { DrawObjects = images.ToArray() }, 
+                ids => new RemoveDrawObjectMessage<Libs.Messages.Data.Image>() { Ids = ids.ToArray() }, 
+                images => new UpdateDrawObjectMessage<Libs.Messages.Data.Image>() { DrawObjects = images.ToArray() },
+                (oldObject, newObject) =>
+                {
+                    if (newObject.Location != null)
+                    {
+                        oldObject.Location = newObject.Location;
+                    }
+
+                    if (newObject.Data != null && newObject.Data.Length > 0)
+                    {
+                        oldObject.Data = newObject.Data;
+                    }
+
+                    if (newObject.Opacity.HasValue)
+                    {
+                        oldObject.Opacity = newObject.Opacity;
+                    }
+
+                    if (newObject.Rotation.HasValue)
+                    {
+                        oldObject.Rotation = newObject.Rotation;
+                    }
+
+                    if (newObject.Size != null)
+                    {
+                        oldObject.Size = newObject.Size;
+                    }
+                });
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -143,8 +190,8 @@ namespace Denrage.AdventureModule
             {
                 Parent = GraphicsService.Graphics.SpriteScreen,
             };
-            window.Initialize(this.drawObjectService, this.loginService);
-            window.Show();
+            //window.Initialize(this.drawObjectService, this.loginService);
+            //window.Show();
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
@@ -156,6 +203,17 @@ namespace Denrage.AdventureModule
             //    Height = 600,
             //    Location = new Point(400, 400),
             //};
+
+            var window2 = new ImageViewerWindow()
+            {
+                Parent = GraphicsService.Graphics.SpriteScreen,
+                Width = 100,
+                Height = 800,
+                Location = new Point(400, 400),
+            };
+
+            window2.Initialize();
+            window2.Show();
         }
 
         protected override void OnModuleLoaded(EventArgs e)

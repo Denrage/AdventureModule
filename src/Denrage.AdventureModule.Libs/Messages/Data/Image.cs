@@ -12,8 +12,8 @@ namespace Denrage.AdventureModule.Libs.Messages.Data
 
         public Vector2 Size { get; set; }
 
-        public float Rotation { get; set; }
+        public float? Rotation { get; set; }
 
-        public float Opacity { get; set; }
+        public float? Opacity { get; set; }
     }
 }

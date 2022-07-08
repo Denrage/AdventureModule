@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,12 +14,26 @@ using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 {
+    public class DrawValueChangeContext
+    {
+        public Guid Id { get; set; }
+
+        public Libs.Messages.Data.Vector2 Location { get; set; }
+
+        public Libs.Messages.Data.Vector2 Size { get; set; }
+
+        public float? Rotation { get; set; }
+
+        public float? Opacity { get; set; }
+    }
+
     public class Image : Tool
     {
         private readonly CounterBox imageIndex;
         private readonly Dictionary<Guid, ImageControl> imageControls = new Dictionary<Guid, ImageControl>();
         private readonly LoginService loginService;
         private readonly DrawObjectService drawObjectService;
+        private readonly Dictionary<Guid, DrawValueChangeContext> valueChangeContext = new Dictionary<Guid, DrawValueChangeContext>();
         private bool isActive = false;
         private bool addingImage = false;
         private bool removingImage = false;
@@ -58,23 +73,43 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
             {
                 image.Moved += (s, e) =>
                 {
-                    serverImage.Location = new Libs.Messages.Data.Vector2() { X = e.CurrentLocation.X, Y = e.CurrentLocation.Y };
-                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                    if (!this.valueChangeContext.TryGetValue(serverImage.Id, out var context))
+                    {
+                        context = new DrawValueChangeContext();
+                        this.valueChangeContext[serverImage.Id] = context;
+                    }
+
+                    context.Location = new Libs.Messages.Data.Vector2() { X = e.CurrentLocation.X, Y = e.CurrentLocation.Y };
                 };
                 image.Resized += (s, e) =>
                 {
-                    serverImage.Size = new Libs.Messages.Data.Vector2() { X = e.CurrentSize.X, Y = e.CurrentSize.Y };
-                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                    if (!this.valueChangeContext.TryGetValue(serverImage.Id, out var context))
+                    {
+                        context = new DrawValueChangeContext();
+                        this.valueChangeContext[serverImage.Id] = context;
+                    }
+
+                    context.Size = new Libs.Messages.Data.Vector2() { X = e.CurrentSize.X, Y = e.CurrentSize.Y };
                 };
                 image.OpacityChanged += opacity =>
                 {
-                    serverImage.Opacity = opacity;
-                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                    if (!this.valueChangeContext.TryGetValue(serverImage.Id, out var context))
+                    {
+                        context = new DrawValueChangeContext();
+                        this.valueChangeContext[serverImage.Id] = context;
+                    }
+
+                    context.Opacity = opacity;
                 };
                 image.RotationChanged += rotation =>
                 {
-                    serverImage.Rotation = rotation;
-                    this.drawObjectService.Update(new[] { serverImage }, false, default);
+                    if (!this.valueChangeContext.TryGetValue(serverImage.Id, out var context))
+                    {
+                        context = new DrawValueChangeContext();
+                        this.valueChangeContext[serverImage.Id] = context;
+                    }
+
+                    context.Rotation = rotation;
                 };
             }
 
@@ -152,7 +187,18 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
         {
             if (gameTime.TotalGameTime.TotalMilliseconds - previousGameTime > 20)
             {
+                var watch = Stopwatch.StartNew();
                 var images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>().ToArray();
+                this.drawObjectService.Update(this.valueChangeContext.Select(x => new Libs.Messages.Data.Image()
+                {
+                    Id = x.Key,
+                    Location = x.Value.Location,
+                    Opacity = x.Value.Opacity,
+                    Rotation = x.Value.Rotation,
+                    Size = x.Value.Size,
+                }), false, default);
+
+                images = this.drawObjectService.GetDrawObjects<Libs.Messages.Data.Image>().ToArray();
 
                 foreach (var item in images)
                 {
@@ -172,20 +218,21 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     }
                 }
 
-                foreach (var item in images.Where(x => x.Username != this.loginService.Name))
-                {
-                    var imageControl = this.imageControls[item.Id];
-                    imageControl.Size = new Point((int)item.Size.X, (int)item.Size.Y);
-                    imageControl.Location = new Point((int)item.Location.X, (int)item.Location.Y);
-                    imageControl.Rotation = item.Rotation;
-                    imageControl.Opacity = item.Opacity;
-                }
-
                 foreach (var item in toRemove)
                 {
                     this.imageControls[item].Dispose();
                     _ = this.imageControls.Remove(item);
                 }
+
+                foreach (var item in images.Where(x => x.Username != this.loginService.Name))
+                {
+                    var imageControl = this.imageControls[item.Id];
+                    imageControl.Size = new Point((int)item.Size.X, (int)item.Size.Y);
+                    imageControl.Location = new Point((int)item.Location.X, (int)item.Location.Y);
+                    imageControl.Rotation = item.Rotation.Value;
+                    imageControl.Opacity = item.Opacity.Value;
+                }
+
 
                 var ownImages = images.Where(x => x.Username == this.loginService.Name).ToArray();
 
@@ -207,6 +254,8 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                 }
 
                 this.previousGameTime = gameTime.TotalGameTime.TotalMilliseconds;
+                watch.Stop();
+                Debug.WriteLine("Time took: " + watch.ElapsedTicks);
             }
         }
 

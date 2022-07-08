@@ -84,7 +84,7 @@ namespace Denrage.AdventureModule.UserInterface
             }
         }
 
-        public float Opactiy
+        public new float Opacity
         {
             get => this.opacity;
             set
@@ -229,10 +229,10 @@ namespace Denrage.AdventureModule.UserInterface
 
                 if (currentScrollWheelValue != 0 && this.AbsoluteBounds.Contains(currentMousePosition))
                 {
-                    this.opacity += Math.Sign(currentScrollWheelValue) * 0.10f;
+                    var opacity = this.Opacity;
+                    opacity += Math.Sign(currentScrollWheelValue) * 0.10f;
 
-                    this.opacity = MathHelper.Clamp(this.opacity, 0f, 1f);
-                    this.OpacityChanged?.Invoke(this.opacity);
+                    this.Opacity = MathHelper.Clamp(opacity, 0f, 1f);
                 }
             }
 
@@ -253,7 +253,7 @@ namespace Denrage.AdventureModule.UserInterface
             destination.Y += (int)scaledOrigin.Y;
 
             // Transparency
-            var color = Color.White * this.opacity;
+            var color = Color.White * this.Opacity;
 
             // Rotation
             spriteBatch.Draw(texture, destination, null, color, this.Rotation, origin, scale, SpriteEffects.None, 0);
