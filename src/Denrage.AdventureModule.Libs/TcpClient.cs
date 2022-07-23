@@ -35,8 +35,6 @@ namespace Denrage.AdventureModule.Libs
         {
             try
             {
-                
-
                 if (this.Client.Connected)
                 {
                     using (var memoryStream = new MemoryStream(BitConverter.GetBytes(data.Length).Concat(data).ToArray()))

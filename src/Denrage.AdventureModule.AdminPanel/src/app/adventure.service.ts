@@ -45,7 +45,19 @@ export class AdventureService {
     },
   ]
 
-  adventures: Adventure[] = [{ id: Guid.parse("310e0336-cc92-49dd-a38b-88ddff1595e3"), templateId: Guid.create(), name: "FooBar", groups: [Guid.parse("aabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("babb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("cabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("dabb4d15-b681-4040-9e0b-b6d4154bb6d0")]}]
+  adventures: Adventure[] = [
+    {
+      id: Guid.parse("310e0336-cc92-49dd-a38b-88ddff1595e3"),
+      templateId: Guid.create(),
+      name: "FooBar",
+      groups: [Guid.parse("aabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("babb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("cabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("dabb4d15-b681-4040-9e0b-b6d4154bb6d0")]
+    },
+    {
+      id: Guid.parse("410e0336-cc92-49dd-a38b-88ddff1595e3"),
+      templateId: Guid.create(),
+      name: "HelloWorld",
+      groups: [Guid.parse("aabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("babb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("cabb4d15-b681-4040-9e0b-b6d4154bb6d0"), Guid.parse("dabb4d15-b681-4040-9e0b-b6d4154bb6d0")]
+    }];
 
   constructor() { }
 
