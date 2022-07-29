@@ -8,6 +8,10 @@
       <mat-card-content>
         <p>IsConnected: {{player.connected}}</p>
       </mat-card-content>
+      <mat-card-actions align="end">
+        <button (click)="editPlayer(player)" mat-button>Edit</button>
+        <button (click)="deletePlayer(player)" mat-button>Remove</button>
+      </mat-card-actions>
     </mat-card>
   </div>
 </div>

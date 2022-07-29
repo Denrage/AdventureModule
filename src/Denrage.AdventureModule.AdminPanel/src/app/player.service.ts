@@ -23,6 +23,10 @@ export class PlayerService {
   addPlayer(player: Player) {
     this.players.push(player);
   }
+
+  deletePlayer(player: Player) {
+    this.players.splice(this.players.indexOf(player), 1);
+  }
 }
 
 export interface Player {

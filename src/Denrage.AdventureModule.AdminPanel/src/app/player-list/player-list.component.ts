@@ -29,7 +29,25 @@ export class PlayerListComponent implements OnInit {
       if (result) {
         this.playerService.addPlayer(result.player);
       }
+    });
+  }
+
+  editPlayer(player: Player): void {
+    var dialogRef = this.dialog.open(EditPlayerDialogComponent, {
+      width: "250px",
+      data: {
+        player: { name: player.name, image: player.image } }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        player.name = result.player.name;
+        player.image = result.player.image;
+      }
     })
   }
 
+  deletePlayer(player: Player): void {
+    this.playerService.deletePlayer(player);
+  }
 }
