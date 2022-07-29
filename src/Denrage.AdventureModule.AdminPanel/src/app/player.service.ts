@@ -19,6 +19,10 @@ export class PlayerService {
   getPlayer(playerId: Guid): Player {
     return this.players.filter(player => player.id.equals(playerId))[0];
   }
+
+  addPlayer(player: Player) {
+    this.players.push(player);
+  }
 }
 
 export interface Player {

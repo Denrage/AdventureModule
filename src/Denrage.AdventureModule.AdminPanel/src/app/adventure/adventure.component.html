@@ -1,5 +1,5 @@
-<div style="display:flex; flex-direction:row;">
-  <ng-container *ngFor="let group of groups">
-    <app-adventure-group [groupId]="group.id"></app-adventure-group>
-  </ng-container>
+<div fxLayout="row wrap" fxLayoutGap="16px grid" style="padding: 10px;">
+  <div fxFlex="25%" fxFlex.xs="100%" fxFlex.sm="33%" *ngFor="let group of groups">
+      <app-adventure-group [groupId]="group.id"></app-adventure-group>
+  </div>
 </div>
