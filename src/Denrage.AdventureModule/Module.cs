@@ -1,8 +1,10 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Input;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AdventureModule.Adventure;
 using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
@@ -30,6 +32,7 @@ namespace Denrage.AdventureModule
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
         private SettingEntry<KeyBinding> placeMapMarkerKeybind;
+        private AdventureScript adventureScript;
 
         internal static Module Instance { get; private set; }
 
@@ -190,8 +193,8 @@ namespace Denrage.AdventureModule
             {
                 Parent = GraphicsService.Graphics.SpriteScreen,
             };
-            //window.Initialize(this.drawObjectService, this.loginService);
-            //window.Show();
+            window.Initialize(this.drawObjectService, this.loginService);
+            window.Show();
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
@@ -212,8 +215,15 @@ namespace Denrage.AdventureModule
                 Location = new Point(400, 400),
             };
 
-            window2.Initialize();
-            window2.Show();
+            //window2.Initialize();
+            //window2.Show();
+            this.adventureScript = new AdventureScript();
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            this.adventureScript?.Update(gameTime);
+            base.Update(gameTime);
         }
 
         protected override void OnModuleLoaded(EventArgs e)
