@@ -33,6 +33,7 @@ namespace Denrage.AdventureModule
         private readonly LoginService loginService;
         private SettingEntry<KeyBinding> placeMapMarkerKeybind;
         private AdventureScript adventureScript;
+        private SettingEntry<KeyBinding> emoteKeybind;
 
         internal static Module Instance { get; private set; }
 
@@ -108,6 +109,10 @@ namespace Denrage.AdventureModule
             this.placeMapMarkerKeybind = settings.DefineSetting("DefaultMountBinding", new KeyBinding(Keys.L), () => "Map Marker", () => "");
             this.placeMapMarkerKeybind.Value.Enabled = true;
             this.placeMapMarkerKeybind.Value.Activated += async delegate { await PlaceMapMarker(); };
+
+            this.emoteKeybind = settings.DefineSetting("EmoteBinding", new KeyBinding(Keys.K), () => "Emote", () => "");
+            this.emoteKeybind.Value.Enabled = true;
+            this.emoteKeybind.Value.Activated += delegate { this.adventureScript.EmoteUsed(); };
         }
 
         private async Task PlaceMapMarker()
@@ -189,12 +194,12 @@ namespace Denrage.AdventureModule
             };
             await this.tcpService.Initialize();
 
-            var window = new CanvasWindow()
-            {
-                Parent = GraphicsService.Graphics.SpriteScreen,
-            };
-            window.Initialize(this.drawObjectService, this.loginService);
-            window.Show();
+            //var window = new CanvasWindow()
+            //{
+            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //};
+            //window.Initialize(this.drawObjectService, this.loginService);
+            //window.Show();
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
@@ -207,13 +212,13 @@ namespace Denrage.AdventureModule
             //    Location = new Point(400, 400),
             //};
 
-            var window2 = new ImageViewerWindow()
-            {
-                Parent = GraphicsService.Graphics.SpriteScreen,
-                Width = 100,
-                Height = 800,
-                Location = new Point(400, 400),
-            };
+            //var window2 = new ImageViewerWindow()
+            //{
+            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //    Width = 100,
+            //    Height = 800,
+            //    Location = new Point(400, 400),
+            //};
 
             //window2.Initialize();
             //window2.Show();
