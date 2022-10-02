@@ -6,14 +6,15 @@ using Denrage.AdventureModule.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
-using MoonSharp.Interpreter;
-using MoonSharp.VsCodeDebugger;
+using Neo.IronLua;
+using Stateless;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.RepresentationModel;
 
@@ -26,6 +27,14 @@ namespace Denrage.AdventureModule.Adventure
         public abstract void Dispose();
 
         public virtual void Update(GameTime gameTime) { }
+    }
+
+    public class LogicBuilderCreator
+    {
+        public object CreateButtonOrderLogic()
+        {
+            return new ButtonOrderBuilder();
+        }
     }
 
     public class AdventureElementCreator
@@ -79,6 +88,142 @@ namespace Denrage.AdventureModule.Adventure
         }
     }
 
+    public interface IButtonOrderBuilderLua
+    {
+        event Action Finished;
+
+        event Action<IMarkerLua[]> StateChanged;
+
+        IButtonOrderBuilderLua Add(IMarkerLua button, int delay = 0);
+
+        void Build();
+    }
+
+    public class ButtonOrderBuilder : IButtonOrderBuilderLua
+    {
+        private readonly List<ButtonState> buttonStates = new List<ButtonState>();
+        private ButtonState initialState;
+        private ButtonState currentState;
+
+        public event Action<IMarkerLua[]> StateChanged;
+
+        public event Action Finished;
+
+        public IButtonOrderBuilderLua Add(IMarkerLua button, int delay = 0)
+        {
+            var state = new ButtonState()
+            {
+                Delay = delay,
+                Button = button,
+            };
+
+            state.OnFailure += () =>
+            {
+                System.Diagnostics.Debug.WriteLine("Failed. Return to initial");
+                this.currentState = this.initialState;
+            };
+            state.OnSuccess += () => this.MoveToNextStep();
+
+            button.Interacted += () => this.currentState.OnPressed(button);
+
+            if (this.buttonStates.Count == 0)
+            {
+                state.Delay = default;
+                this.initialState = state;
+            }
+
+            this.buttonStates.Add(state);
+            return this;
+        }
+
+        private void MoveToNextStep()
+        {
+            if (this.currentState is null)
+            {
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine("Switch to next step");
+
+            this.currentState = this.currentState.NextState;
+
+            var pressedButtons = new List<IMarkerLua>();
+            var currentState = this.initialState;
+            while (currentState != this.currentState)
+            {
+                pressedButtons.Add(currentState.Button);
+                currentState = currentState.NextState;
+            }
+
+            this.StateChanged?.Invoke(pressedButtons.ToArray());
+
+            if (this.currentState is null)
+            {
+                Finished?.Invoke();
+                return;
+            }
+
+            this.currentState.OnEnter();
+        }
+
+        public void Build()
+        {
+            for (int i = 0; i < this.buttonStates.Count - 1; i++)
+            {
+                this.buttonStates[i].NextState = this.buttonStates[i + 1];
+            }
+
+            this.currentState = this.initialState;
+        }
+
+        private class ButtonState
+        {
+            private CancellationTokenSource delayToken;
+
+            public event Action OnSuccess;
+
+            public event Action OnFailure;
+
+            public IMarkerLua Button { get; set; }
+
+            public int Delay { get; set; }
+
+            public ButtonState NextState { get; set; }
+
+            public void OnPressed(IMarkerLua button)
+            {
+                this.delayToken?.Cancel();
+                if (button == this.Button)
+                {
+                    this.OnSuccess?.Invoke();
+                }
+                else
+                {
+                    this.OnFailure?.Invoke();
+                }
+            }
+
+            public void OnEnter()
+            {
+                if (this.Delay != default)
+                {
+                    this.delayToken = new CancellationTokenSource();
+                    try
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(this.Delay), delayToken.Token);
+                            this.OnFailure.Invoke();
+                        });
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                }
+            }
+        }
+    }
+
     public class CharacterInformation : ICharacterLua
     {
         public Vector3 Position => GameService.Gw2Mumble.PlayerCharacter.Position;
@@ -101,6 +246,8 @@ namespace Denrage.AdventureModule.Adventure
     public interface IMarkerLua
     {
         event Action Interacted;
+
+        void FlipNinetyDegrees();
     }
 
     public interface ICuboidLua
@@ -114,11 +261,19 @@ namespace Denrage.AdventureModule.Adventure
         void Test();
     }
 
+    public class LuaLogger
+    {
+        public void Log(object message) => System.Diagnostics.Debug.WriteLine(message.ToString());
+    }
+
     public class AdventureScript
     {
-        private Script script;
         private AdventureElementCreator creator;
+        private readonly dynamic luaEnvironment;
         private readonly CharacterInformation characterInformation;
+        private readonly LogicBuilderCreator logicCreator;
+        private readonly LuaLogger logger;
+        private readonly Lua luaEngine;
         private bool scriptValid = false;
 
         public void Update(GameTime gameTime)
@@ -131,10 +286,10 @@ namespace Denrage.AdventureModule.Adventure
                     item.Update(gameTime);
                 }
 
-                if (script.Globals.Keys.Contains(DynValue.NewString("update")))
-                {
-                    this.script.Call(script.Globals["update"]);
-                }
+                //if (script.Globals.Keys.Contains(DynValue.NewString("update")))
+                //{
+                //    this.script.Call(script.Globals["update"]);
+                //}
             }
         }
 
@@ -154,35 +309,49 @@ namespace Denrage.AdventureModule.Adventure
             fileWatcher.EnableRaisingEvents = true;
             this.creator = new AdventureElementCreator();
             this.characterInformation = new CharacterInformation();
-            UserData.RegisterType<AdventureElementCreator>();
-            UserData.RegisterType<ICuboidLua>();
-            UserData.RegisterType<ICharacterLua>();
-            UserData.RegisterType<IMarkerLua>();
-            UserData.RegisterType<Vector3>();
+            this.logicCreator = new LogicBuilderCreator();
+            this.logger = new LuaLogger();
+            this.luaEngine = new Lua();
+
+            // create an environment, that is associated to the lua scripts
+            this.luaEnvironment = this.luaEngine.CreateEnvironment<LuaGlobal>();
+
+
+            this.luaEnvironment.character = this.characterInformation;
+            this.luaEnvironment.logicCreator = this.logicCreator;
+            this.luaEnvironment.logger = this.logger;
 
             this.LoadScript(file);
         }
 
         private void LoadScript(string path)
         {
-            scriptValid = false;
-            this.creator.Clear();
-            this.script = new Script();
-            script.Globals["Vector3"] = typeof(Vector3);
-            script.Globals["character"] = this.characterInformation;
-
-            script.DoFile(path);
-
-            if (script.Globals.Keys.Contains(DynValue.NewString("onStart")))
+            try
             {
-                this.script.Call(script.Globals["onStart"], this.creator);
-            }
+                scriptValid = false;
+                this.creator.Clear();
+                var chunk = this.luaEngine.CompileChunk(path, new LuaCompileOptions() { DebugEngine = LuaStackTraceDebugger.Default });
+                this.luaEnvironment.dochunk(chunk);
 
-            if (script.Globals.Keys.Contains(DynValue.NewString("onStarted")))
+
+
+                if (((LuaGlobal)this.luaEnvironment).ContainsKey("onStart"))
+                {
+                    this.luaEnvironment.onStart(this.creator);
+                }
+
+                if (((LuaGlobal)this.luaEnvironment).ContainsKey("onStarted"))
+                {
+                    this.luaEnvironment.onStarted();
+                }
+
+            }
+            catch (Exception e)
             {
-                this.script.Call(script.Globals["onStarted"]);
+                System.Diagnostics.Debug.WriteLine("Expception: {0}", e.Message);
+                var d = LuaExceptionData.GetData(e); // get stack trace
+                System.Diagnostics.Debug.WriteLine("StackTrace: {0}", d.FormatStackTrace(0, false));
             }
-
             scriptValid = true;
         }
     }
@@ -345,7 +514,6 @@ namespace Denrage.AdventureModule.Adventure
         }
     }
 
-
     public class MarkerElement : AdventureElement, IMarkerLua
     {
         private readonly IEntity internalEditEntity;
@@ -355,6 +523,11 @@ namespace Denrage.AdventureModule.Adventure
         public override IEntity EditEntity => this.internalEditEntity;
 
         public event Action Interacted;
+
+        public void FlipNinetyDegrees()
+        {
+            ((MarkerEntity)this.internalEditEntity).Rotation = ((MarkerEntity)this.internalEditEntity).Rotation + new Vector3(0, 90, 0);
+        }
 
         public override void Dispose()
         {

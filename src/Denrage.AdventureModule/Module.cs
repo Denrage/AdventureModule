@@ -223,6 +223,30 @@ namespace Denrage.AdventureModule
             //window2.Initialize();
             //window2.Show();
             this.adventureScript = new AdventureScript();
+
+            //var buttonOne = new TestMarker();
+            //var buttonTwo = new TestMarker();
+            //var buttonThree = new TestMarker();
+            //var buttonFour = new TestMarker();
+            //var buttonFive = new TestMarker();
+
+            //var buttonOrderBuilder = new ButtonOrderBuilder();
+            //buttonOrderBuilder.Finished += () => System.Diagnostics.Debug.WriteLine("Button order finished");
+            //buttonOrderBuilder.Add(buttonOne);
+            //buttonOrderBuilder.Add(buttonTwo, 2);
+            //buttonOrderBuilder.Add(buttonThree);
+            //buttonOrderBuilder.Add(buttonFour);
+            //buttonOrderBuilder.Add(buttonFive);
+            //buttonOrderBuilder.Build();
+            //buttonOne.Interact();
+            //await Task.Delay(TimeSpan.FromSeconds(1));
+            //buttonTwo.Interact();
+            //buttonFour.Interact();
+            //buttonOne.Interact();
+            //buttonTwo.Interact();
+            //buttonThree.Interact();
+            //buttonFour.Interact();
+            //buttonFive.Interact();
         }
 
         protected override void Update(GameTime gameTime)
