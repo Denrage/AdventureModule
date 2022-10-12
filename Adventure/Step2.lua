@@ -1,5 +1,5 @@
 function buttonLogicFinished()
-    cuboid:Test();
+    StepLogic.NextStep("Step3");
 end
 
 function buttonPressChanged(buttons)
@@ -11,7 +11,6 @@ function buttonPressChanged(buttons)
 end
 
 function onStart(creator)
-    cuboid = creator:CreateCuboid("test", CreateVector(33.97171,-319.3138, 32.18883), CreateVector(-10,10,10));
     button1 = creator:CreateMarker("button1", CreateVector(23.88107,-289.9126,35.43097), CreateVector(90,0,180));
     button2 = creator:CreateMarker("button2", CreateVector(4.48517,-300.5934,35.18379), CreateVector(90,0,75));
     button3 = creator:CreateMarker("button3", CreateVector(21.91974,-326.3877,35.18382), CreateVector(90,0,-30));
@@ -23,18 +22,4 @@ function onStart(creator)
 end
 
 function update()
-end
-
--- xpos="23.88107" ypos="34.43097" zpos="-290.6126"
--- xpos="5.38517" ypos="34.18379" zpos="-300.5934"
--- xpos="21.91974" ypos="34.18382" zpos="-325.3877"
-
-function onEmote(emote)
-    if cuboid:CharacterInside then
-        cuboid:Test();
-    end
-end
-
-function onStarted()
-    Character.EmoteUsed:add(onEmote);
 end

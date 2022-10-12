@@ -194,10 +194,10 @@ namespace Denrage.AdventureModule
             };
             await this.tcpService.Initialize();
 
-            //var window = new CanvasWindow()
-            //{
-            //    Parent = GraphicsService.Graphics.SpriteScreen,
-            //};
+            var window = new CanvasWindow()
+            {
+                Parent = GraphicsService.Graphics.SpriteScreen,
+            };
             //window.Initialize(this.drawObjectService, this.loginService);
             //window.Show();
 
