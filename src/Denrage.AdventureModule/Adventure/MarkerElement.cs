@@ -31,13 +31,23 @@ namespace Denrage.AdventureModule.Adventure
             GameService.Graphics.World.RemoveEntity(this.EditEntity);
         }
 
-        public MarkerElement(Vector3 position, Vector3 rotation, int mapId)
+        public MarkerElement(Vector3 position, Vector3 rotation, int mapId, float fadeNear = -1, float fadeFar = -1)
         {
             this.internalEditEntity = new MarkerEntity(Module.Instance.ContentsManager.GetTexture("marker.png"), mapId)
             {
                 Position = position,
                 Rotation = rotation,
             };
+
+            if (fadeNear != -1)
+            {
+                ((MarkerEntity)this.internalEditEntity).FadeNear = fadeNear;
+            }
+
+            if (fadeFar != -1)
+            {
+                ((MarkerEntity)this.internalEditEntity).FadeFar = fadeFar;
+            }
 
             GameService.Graphics.World.AddEntity(this.EditEntity);
 
@@ -88,6 +98,10 @@ namespace Denrage.AdventureModule.Adventure
             public Vector3 Position { get; set; }
 
             public Vector3? Rotation { get; set; }
+
+            public float FadeNear { get; set; } = 0f;
+
+            public float FadeFar { get; set; } = float.MaxValue;
 
             static MarkerEntity()
             {
@@ -172,7 +186,7 @@ namespace Denrage.AdventureModule.Adventure
                          * Matrix.CreateTranslation(this.Position);
                     }
 
-                    sharedEffect.SetEntityState(matrix, this.texture, 1f, 0f, 2500f, false, Color.White, true);
+                    sharedEffect.SetEntityState(matrix, this.texture, 1f, this.FadeNear, this.FadeFar, false, Color.White, true);
 
                     graphicsDevice.SetVertexBuffer(_sharedVertexBuffer);
 
