@@ -107,6 +107,7 @@ namespace Denrage.AdventureModule.Adventure
             catch (Exception ex)
             {
                 var stackTrace = LuaExceptionData.GetData(ex).FormatStackTrace(0, false);
+                
                 throw;
             }
         }

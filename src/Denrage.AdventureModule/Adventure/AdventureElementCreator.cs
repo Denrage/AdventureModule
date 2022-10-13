@@ -21,11 +21,11 @@ namespace Denrage.AdventureModule.Adventure
         public object CreateCuboidGlobal(string name, Vector3 position, Vector3 dimension, int mapId)
             => this.creator.CreateCuboid(name, position, dimension, mapId, this.step, true);
 
-        public object CreateMarker(string name, Vector3 position, Vector3 rotation, int mapId, float fadeNear = -1, float fadeFar = -1)
-            => this.creator.CreateMarker(name, position, rotation, mapId, this.step, false, fadeNear, fadeFar);
+        public object CreateMarker(string name, string textureName, Vector3 position, Vector3 rotation, int mapId, float fadeNear = -1, float fadeFar = -1)
+            => this.creator.CreateMarker(name, textureName, position, rotation, mapId, this.step, false, fadeNear, fadeFar);
 
-        public object CreateMarkerGlobal(string name, Vector3 position, Vector3 rotation, int mapId, float fadeNear = -1, float fadeFar = -1)
-            => this.creator.CreateMarker(name, position, rotation, mapId, this.step, true, fadeNear, fadeFar);
+        public object CreateMarkerGlobal(string name, string textureName, Vector3 position, Vector3 rotation, int mapId, float fadeNear = -1, float fadeFar = -1)
+            => this.creator.CreateMarker(name, textureName, position, rotation, mapId, this.step, true, fadeNear, fadeFar);
     }
 
     public class AdventureElementCreator
@@ -83,9 +83,9 @@ namespace Denrage.AdventureModule.Adventure
             return result;
         }
 
-        public object CreateMarker(string name, Vector3 position, Vector3 rotation, int mapId, Step step, bool global, float fadeNear = -1, float fadeFar = -1)
+        public object CreateMarker(string name, string textureName, Vector3 position, Vector3 rotation, int mapId, Step step, bool global, float fadeNear = -1, float fadeFar = -1)
         {
-            var result = new MarkerElement(position, rotation, mapId, this.debugService, fadeNear, fadeFar);
+            var result = new MarkerElement(position, rotation, mapId, textureName, this.debugService, fadeNear, fadeFar);
             
             if (global)
             {

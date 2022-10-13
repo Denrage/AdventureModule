@@ -27,6 +27,7 @@ namespace Denrage.AdventureModule.Adventure
             state.OnFailure += () =>
             {
                 System.Diagnostics.Debug.WriteLine("Failed. Return to initial");
+                this.StateChanged?.Invoke(Array.Empty<IMarkerLua>());
                 this.currentState = this.initialState;
             };
             state.OnSuccess += () => this.MoveToNextStep();

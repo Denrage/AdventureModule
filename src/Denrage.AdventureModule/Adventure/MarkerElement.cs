@@ -7,12 +7,14 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Denrage.AdventureModule.Adventure
 {
     public class MarkerElement : AdventureElement, IMarkerLua
     {
+        private const string ADVENTURE_FOLDER = @"D:\Repos\AdventureModule\Adventure";
         private const float INTERACT_RADIUS = 2.5f;
 
         private readonly MarkerEntity marker;
@@ -20,6 +22,7 @@ namespace Denrage.AdventureModule.Adventure
         private readonly Vector3 position;
         private readonly int mapId;
         private readonly AdventureDebugService debugService;
+        private readonly AsyncTexture2D texture;
         private bool interactPressed;
 
         public event Action Interacted;
@@ -39,13 +42,25 @@ namespace Denrage.AdventureModule.Adventure
             }
         }
 
-        public MarkerElement(Vector3 position, Vector3 rotation, int mapId, AdventureDebugService debugService, float fadeNear = -1, float fadeFar = -1)
+        public void ChangeTexture(string textureName)
+        {
+            using var textureStream = new FileStream(Path.Combine(ADVENTURE_FOLDER, textureName), FileMode.Open);
+            this.texture.SwapTexture(TextureUtil.FromStreamPremultiplied(textureStream));
+        }
+
+        public MarkerElement(Vector3 position, Vector3 rotation, int mapId, string textureName, AdventureDebugService debugService, float fadeNear = -1, float fadeFar = -1)
         {
             this.debugService = debugService;
             this.position = position;
             this.mapId = mapId;
+            this.texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
 
-            this.marker = new MarkerEntity(Module.Instance.ContentsManager.GetTexture("marker.png"), this.mapId, this.debugService)
+            using (var textureStream = new FileStream(Path.Combine(ADVENTURE_FOLDER, textureName), FileMode.Open))
+            {
+                this.texture.SwapTexture(TextureUtil.FromStreamPremultiplied(textureStream));
+            }
+
+            this.marker = new MarkerEntity(this.texture, this.mapId, this.debugService)
             {
                 Position = position,
                 Rotation = rotation,

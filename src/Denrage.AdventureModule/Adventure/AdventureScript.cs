@@ -69,7 +69,7 @@ namespace Denrage.AdventureModule.Adventure
             this.steps.Clear();
             this.ActivateStep(null);
             this.StepsChanged?.Invoke();
-            foreach (var item in Directory.GetFiles(scriptFolder))
+            foreach (var item in Directory.GetFiles(scriptFolder, "*.lua"))
             {
                 var step = new Step()
                 {
