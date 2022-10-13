@@ -1,3 +1,6 @@
+-- possibility to set and change texture
+-- only display if a certain distance next to it
+-- restrict steps to specific map
 function buttonLogicFinished()
     StepLogic.NextStep("Step3");
 end

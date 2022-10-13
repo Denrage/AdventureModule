@@ -66,6 +66,11 @@ namespace Denrage.AdventureModule.Adventure
 
         public void ReloadStep(Step step)
         {
+            var setActive = step == this.ActiveStep;
+            if (setActive)
+            {
+                this.ActivateStep(null);
+            }
             step.Chunk = this.engine.CompileChunk(step.LuaFile, new LuaCompileOptions() { ClrEnabled = true });
             step.Environment = this.engine.CreateEnvironment<AdventureGlobal>();
             step.Environment.Character = this.characterInformation;
@@ -75,6 +80,11 @@ namespace Denrage.AdventureModule.Adventure
 
             _ = step.Environment.DoChunk(step.Chunk);
             this.StepLoaded?.Invoke(step);
+
+            if (setActive)
+            {
+                this.ActivateStep(step);
+            }
         }
 
         public void ActivateStep(Step step)
