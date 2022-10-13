@@ -12,6 +12,208 @@ using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.Adventure
 {
+    public class DialogBuilder
+    {
+        public DialogGraph Create()
+            => new DialogGraph();
+    }
+
+    public class DialogGraph
+    {
+        private readonly List<Node> nodes = new List<Node>();
+        private readonly List<Edge> edges = new List<Edge>();
+
+        public void AddNode(int id, string text)
+        {
+            this.nodes.Add(new Node()
+            {
+                Id = id,
+                Text = text,
+            });
+        }
+
+        public void AddEdge(int node, int nextNode, string text, Func<bool> predicate = null, Func<LuaResult> action = null)
+        {
+            if (predicate is null)
+            {
+                predicate = () => true;
+            }
+
+            this.edges.Add(new Edge()
+            {
+                NextNodeId = nextNode,
+                NodeId = node,
+                Predicate = predicate,
+                Text = text,
+                Action = action,
+            });
+        }
+
+        public class Node
+        {
+            public int Id { get; set; }
+
+            public string Text { get; set; }
+
+            public List<Edge> IncomingEdges { get; } = new List<Edge>();
+
+            public List<Edge> OutgoingEdges { get; } = new List<Edge>();
+        }
+
+        public class Edge
+        {
+            public int NodeId { get; set; }
+
+            public int NextNodeId { get; set; }
+
+            public Func<bool> Predicate { get; set; }
+
+            public Func<LuaResult> Action { get; set; }
+
+            public string Text { get; set; }
+
+            public Node PreviousNode { get; set; }
+
+            public Node NextNode { get; set; }
+        }
+
+        public AdventureDialog Build()
+        {
+            foreach (var node in this.nodes)
+            {
+                foreach (var edge in this.edges)
+                {
+                    if (edge.NodeId == node.Id)
+                    {
+                        node.OutgoingEdges.Add(edge);
+                        edge.PreviousNode = node;
+                    }
+                    else if (edge.NextNodeId == node.Id)
+                    {
+                        node.IncomingEdges.Add(edge);
+                        edge.NextNode = node;
+                    }
+                }
+            }
+
+            return new AdventureDialog(this.nodes.First());
+
+        }
+    }
+
+    public class AdventureDialog
+    {
+        private readonly DialogGraph.Node node;
+
+        public DialogGraph.Node CurrentNode { get; private set; }
+
+        public event Action CurrentNodeChanged;
+
+        public event Action OnClose;
+
+        public void MoveNext(DialogGraph.Edge edge)
+        {
+            _ = edge.Action?.Invoke();
+
+            if (edge.NextNode is null)
+            {
+                this.OnClose?.Invoke();
+            }
+            else
+            {
+                this.CurrentNode = edge.NextNode;
+                this.CurrentNodeChanged?.Invoke();
+            }
+        }
+
+        public AdventureDialog(DialogGraph.Node node)
+        {
+            this.node = node;
+            this.CurrentNode = node;
+        }
+
+        public void Show()
+        {
+            var dialog = new DialogWindow(this)
+            {
+                Parent = GameService.Graphics.SpriteScreen,
+            };
+            dialog.Show();
+        }
+    }
+
+    public class DialogWindow : WindowBase2
+    {
+        private readonly AdventureDialog dialog;
+        private Label npcTextLabel;
+        private FlowPanel responseOptionList;
+
+        public DialogWindow(AdventureDialog dialog)
+        {
+            this.dialog = dialog;
+            this.dialog.CurrentNodeChanged += () => this.UpdateNode();
+            this.dialog.OnClose += () => this.Dispose();
+
+            this.ConstructWindow(Module.Instance.ContentsManager.GetTexture("background2.png"), new Rectangle(0, 0, 400, 300), new Rectangle(0, 0, 400, 300));
+            this.BuildWindow();
+        }
+
+        private void BuildWindow()
+        {
+            var mainPanel = new FlowPanel()
+            {
+                Parent = this,
+                Height = this.ContentRegion.Height,
+                Width = this.ContentRegion.Width,
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
+            };
+
+            this.npcTextLabel = new Label()
+            {
+                Text = "Placeholder",
+                AutoSizeHeight = true,
+                WrapText = true,
+                Width = mainPanel.ContentRegion.Width,
+                Parent = mainPanel,
+            };
+
+            this.responseOptionList = new FlowPanel()
+            {
+                Parent = mainPanel,
+                HeightSizingMode = SizingMode.Fill,
+                Width = mainPanel.ContentRegion.Width,
+                FlowDirection = ControlFlowDirection.SingleTopToBottom,
+            };
+
+            this.UpdateNode();
+        }
+
+        private void UpdateNode()
+        {
+            var toDispose = this.responseOptionList.Children.ToArray();
+            foreach (var item in toDispose)
+            {
+                item.Dispose();
+            }
+
+            this.npcTextLabel.Text = this.dialog.CurrentNode.Text;
+
+            foreach (var item in this.dialog.CurrentNode.OutgoingEdges)
+            {
+                if (item.Predicate())
+                {
+                    var button = new StandardButton()
+                    {
+                        Parent = this.responseOptionList,
+                        Text = item.Text,
+                    };
+
+                    button.Click += (s, e) => this.dialog.MoveNext(item);
+                }
+            }
+        }
+    }
+
     public class AdventureDebugService
     {
         public event Action DebugActivated;
@@ -42,6 +244,7 @@ namespace Denrage.AdventureModule.Adventure
         private readonly AdventureElementCreator adventureElementCreator;
         private readonly LuaLogger logger;
         private readonly LogicBuilderCreator logicCreator;
+        private readonly DialogBuilder dialog;
         private readonly Dictionary<string, Step> steps = new Dictionary<string, Step>();
 
         public event Action StepsChanged;
@@ -54,13 +257,14 @@ namespace Denrage.AdventureModule.Adventure
 
         public IReadOnlyDictionary<string, Step> Steps => new ReadOnlyDictionary<string, Step>(this.steps);
 
-        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator adventureElementCreator, LuaLogger logger, LogicBuilderCreator logicCreator)
+        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator adventureElementCreator, LuaLogger logger, LogicBuilderCreator logicCreator, DialogBuilder dialog)
         {
             this.engine = engine;
             this.characterInformation = characterInformation;
             this.adventureElementCreator = adventureElementCreator;
             this.logger = logger;
             this.logicCreator = logicCreator;
+            this.dialog = dialog;
             this.LoadSteps(scriptFolder);
         }
 
@@ -100,6 +304,7 @@ namespace Denrage.AdventureModule.Adventure
             step.Environment.StepLogic = new StepLogic(this);
             step.Environment.Logger = this.logger;
             step.Environment.LogicCreator = this.logicCreator;
+            step.Environment.Dialog = this.dialog;
 
             _ = step.Environment.DoChunk(step.Chunk);
             this.StepLoaded?.Invoke(step);
@@ -241,7 +446,8 @@ namespace Denrage.AdventureModule.Adventure
             this.creator = new AdventureElementCreator(new AdventureDebugService());
             this.logger = new LuaLogger();
             this.characterInformation = new CharacterInformation();
-            var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure", characterInformation, creator, logger, logicCreator);
+            var dialog = new DialogBuilder();
+            var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure2", characterInformation, creator, logger, logicCreator, dialog);
 
             //foreach (var file in Directory.GetFiles(@"D:\Repos\AdventureModule\Adventure"))
             //{

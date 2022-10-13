@@ -67,6 +67,9 @@ namespace Denrage.AdventureModule.Adventure
         public StepLogic StepLogic { get; set; }
 
         [LuaMember]
+        public DialogBuilder Dialog { get; set; }
+
+        [LuaMember]
         public Vector3 CreateVector(float x, float y, float z) 
             => new Vector3(x, y, z);
 

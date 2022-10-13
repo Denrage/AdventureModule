@@ -27,7 +27,7 @@ namespace Denrage.AdventureModule.Adventure
             state.OnFailure += () =>
             {
                 System.Diagnostics.Debug.WriteLine("Failed. Return to initial");
-                this.StateChanged?.Invoke(Array.Empty<IMarkerLua>());
+                _ = (this.StateChanged?.Invoke(Array.Empty<IMarkerLua>()));
                 this.currentState = this.initialState;
             };
             state.OnSuccess += () => this.MoveToNextStep();
@@ -63,7 +63,7 @@ namespace Denrage.AdventureModule.Adventure
                 currentState = currentState.NextState;
             }
 
-            this.StateChanged?.Invoke(pressedButtons.ToArray());
+            _ = (this.StateChanged?.Invoke(pressedButtons.ToArray()));
 
             if (this.currentState is null)
             {
