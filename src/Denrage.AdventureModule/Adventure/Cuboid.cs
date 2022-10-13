@@ -13,8 +13,9 @@ namespace Denrage.AdventureModule.Adventure
     {
         private Vector3 position;
         private Vector3 dimensions;
-        private readonly CuboidEntity internalEditEntity;
+        private readonly CuboidEntity debugEntity;
         private readonly int mapId;
+        private readonly AdventureDebugService debugService;
         private bool entered = false;
 
         public event Action PlayerEntered;
@@ -26,7 +27,7 @@ namespace Denrage.AdventureModule.Adventure
             set
             {
                 position = value;
-                this.internalEditEntity.Position = value;
+                this.debugEntity.Position = value;
             }
         }
 
@@ -37,19 +38,25 @@ namespace Denrage.AdventureModule.Adventure
             set
             {
                 dimensions = value;
-                this.internalEditEntity.Dimensions = value;
+                this.debugEntity.Dimensions = value;
             }
         }
 
-        public override IEntity EditEntity => this.internalEditEntity;
-
         public bool CharacterInside { get; set; } = false;
 
-        public Cuboid(int mapId)
+        public Cuboid(int mapId, AdventureDebugService debugService)
         {
             this.mapId = mapId;
-            this.internalEditEntity = new CuboidEntity(mapId);
-            GameService.Graphics.World.AddEntity(this.EditEntity);
+            this.debugService = debugService;
+            this.debugEntity = new CuboidEntity(mapId);
+
+            this.debugService.DebugActivated += () => GameService.Graphics.World.AddEntity(this.debugEntity);
+            this.debugService.DebugDeactivated += () => GameService.Graphics.World.RemoveEntity(this.debugEntity);
+
+            if (this.debugService.IsDebug)
+            {
+                GameService.Graphics.World.AddEntity(this.debugEntity);
+            }
         }
 
         public void Test()
@@ -93,7 +100,10 @@ namespace Denrage.AdventureModule.Adventure
 
         public override void Dispose()
         {
-            GameService.Graphics.World.RemoveEntity(this.EditEntity);
+            if (this.debugService.IsDebug)
+            {
+                GameService.Graphics.World.RemoveEntity(this.debugEntity);
+            }
         }
 
         private class CuboidEntity : IEntity

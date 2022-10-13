@@ -33,6 +33,12 @@ namespace Denrage.AdventureModule.Adventure
         private Dictionary<Step, Dictionary<string, AdventureElement>> localElements = new Dictionary<Step, Dictionary<string, AdventureElement>>();
 
         private Dictionary<string, AdventureElement> elements = new Dictionary<string, AdventureElement>();
+        private readonly AdventureDebugService debugService;
+
+        public AdventureElementCreator(AdventureDebugService debugService)
+        {
+            this.debugService = debugService;
+        }
 
         public IEnumerable<AdventureElement> Elements
         {
@@ -47,7 +53,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public object CreateCuboid(string name, Vector3 position, Vector3 dimension, int mapId, Step step, bool global)
         {
-            var result = new Cuboid(mapId)
+            var result = new Cuboid(mapId, this.debugService)
             {
                 Position = position,
                 Dimensions = dimension,
@@ -79,7 +85,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public object CreateMarker(string name, Vector3 position, Vector3 rotation, int mapId, Step step, bool global, float fadeNear = -1, float fadeFar = -1)
         {
-            var result = new MarkerElement(position, rotation, mapId, fadeNear, fadeFar);
+            var result = new MarkerElement(position, rotation, mapId, this.debugService, fadeNear, fadeFar);
             
             if (global)
             {

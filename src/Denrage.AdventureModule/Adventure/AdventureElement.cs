@@ -9,8 +9,6 @@ namespace Denrage.AdventureModule.Adventure
 {
     public abstract class AdventureElement : IDisposable
     {
-        public abstract IEntity EditEntity { get; }
-
         public abstract void Dispose();
 
         public virtual void Update(GameTime gameTime) { }

@@ -12,6 +12,29 @@ using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.Adventure
 {
+    public class AdventureDebugService
+    {
+        public event Action DebugActivated;
+
+        public event Action DebugDeactivated;
+
+        public bool IsDebug { get; private set; } = true;
+
+        public void ToggleDebug()
+        {
+            if (this.IsDebug)
+            {
+                this.IsDebug = false;
+                this.DebugDeactivated?.Invoke();
+            }
+            else
+            {
+                this.IsDebug = true;
+                this.DebugActivated?.Invoke();
+            }
+        }
+    }
+
     public class Adventure
     {
         private readonly Lua engine;
@@ -215,7 +238,7 @@ namespace Denrage.AdventureModule.Adventure
             this.luaEngine = new Lua();
 
             this.logicCreator = new LogicBuilderCreator();
-            this.creator = new AdventureElementCreator();
+            this.creator = new AdventureElementCreator(new AdventureDebugService());
             this.logger = new LuaLogger();
             this.characterInformation = new CharacterInformation();
             var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure", characterInformation, creator, logger, logicCreator);
