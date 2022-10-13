@@ -14,6 +14,7 @@ namespace Denrage.AdventureModule.Adventure
     {
         private readonly IEntity internalEditEntity;
         private readonly Vector3 position;
+        private readonly int mapId;
         private bool interactPressed;
 
         public override IEntity EditEntity => this.internalEditEntity;
@@ -30,9 +31,9 @@ namespace Denrage.AdventureModule.Adventure
             GameService.Graphics.World.RemoveEntity(this.EditEntity);
         }
 
-        public MarkerElement(Vector3 position, Vector3 rotation)
+        public MarkerElement(Vector3 position, Vector3 rotation, int mapId)
         {
-            this.internalEditEntity = new MarkerEntity(Module.Instance.ContentsManager.GetTexture("marker.png"))
+            this.internalEditEntity = new MarkerEntity(Module.Instance.ContentsManager.GetTexture("marker.png"), mapId)
             {
                 Position = position,
                 Rotation = rotation,
@@ -48,20 +49,24 @@ namespace Denrage.AdventureModule.Adventure
                 }
             };
             this.position = position;
+            this.mapId = mapId;
         }
 
         public override void Update(GameTime gameTime)
         {
-            if (this.interactPressed)
+            if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
             {
-                if (Vector3.Distance(GameService.Gw2Mumble.PlayerCharacter.Position, this.position) < 5)
+                if (this.interactPressed)
                 {
-                    this.Interacted?.Invoke();
-                }
+                    if (Vector3.Distance(GameService.Gw2Mumble.PlayerCharacter.Position, this.position) < 5)
+                    {
+                        this.Interacted?.Invoke();
+                    }
 
-                this.interactPressed = false;
+                    this.interactPressed = false;
+                }
+                base.Update(gameTime);
             }
-            base.Update(gameTime);
         }
 
         private class MarkerEntity : IEntity
@@ -76,6 +81,7 @@ namespace Denrage.AdventureModule.Adventure
             private static readonly TestEffect sharedEffect;
 
             private readonly AsyncTexture2D texture;
+            private readonly int mapId;
 
             public float DrawOrder => default;
 
@@ -89,9 +95,10 @@ namespace Denrage.AdventureModule.Adventure
                 CreateSharedVertexBuffer();
             }
 
-            public MarkerEntity(AsyncTexture2D texture)
+            public MarkerEntity(AsyncTexture2D texture, int mapId)
             {
                 this.texture = texture;
+                this.mapId = mapId;
                 //this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
             }
 
@@ -116,61 +123,64 @@ namespace Denrage.AdventureModule.Adventure
 
             public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
             {
-                const float minSize = 5f;
-                const float maxSize = 2048f;
-                //var position = new Vector3(-25.414f, -4.129f, 121.7f);
-                //var direction = new Vector3((float)System.Math.PI / 2, 0f, (float)System.Math.PI / 2);
-
-                var matrix = Matrix.CreateScale(1f, 1f, 1f);
-
-                graphicsDevice.RasterizerState = RasterizerState.CullNone;
-
-                if (!this.Rotation.HasValue)
+                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
                 {
-                    matrix *= Matrix.CreateBillboard(this.Position,
-                                              new Vector3(camera.Position.X,
-                                                          camera.Position.Y,
-                                                          camera.Position.Z),
-                                              new Vector3(0, 0, 1),
-                                              camera.Forward);
+                    const float minSize = 5f;
+                    const float maxSize = 2048f;
+                    //var position = new Vector3(-25.414f, -4.129f, 121.7f);
+                    //var direction = new Vector3((float)System.Math.PI / 2, 0f, (float)System.Math.PI / 2);
 
-                    // Enforce min/max size
-                    var transformMatrix = Matrix.Multiply(Matrix.Multiply(matrix, sharedEffect.View),
-                                                          sharedEffect.Projection);
+                    var matrix = Matrix.CreateScale(1f, 1f, 1f);
 
-                    for (int i = 0; i < _faceVerts.Length; i++)
+                    graphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+                    if (!this.Rotation.HasValue)
                     {
-                        _screenVerts[i] = Vector4.Transform(_faceVerts[i], transformMatrix);
-                        _screenVerts[i] /= _screenVerts[i].W;
+                        matrix *= Matrix.CreateBillboard(this.Position,
+                                                  new Vector3(camera.Position.X,
+                                                              camera.Position.Y,
+                                                              camera.Position.Z),
+                                                  new Vector3(0, 0, 1),
+                                                  camera.Forward);
+
+                        // Enforce min/max size
+                        var transformMatrix = Matrix.Multiply(Matrix.Multiply(matrix, sharedEffect.View),
+                                                              sharedEffect.Projection);
+
+                        for (int i = 0; i < _faceVerts.Length; i++)
+                        {
+                            _screenVerts[i] = Vector4.Transform(_faceVerts[i], transformMatrix);
+                            _screenVerts[i] /= _screenVerts[i].W;
+                        }
+
+                        // Very alloc heavy
+                        var bounds = BoundingRectangle.CreateFrom(_screenVerts.Select(s => new Point2(s.X, s.Y)).ToArray());
+
+                        float pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
+                        float limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
+
+                        // Eww
+                        matrix *= Matrix.CreateTranslation(-this.Position)
+                                     * Matrix.CreateScale(limitY / pixelSizeY)
+                                     * Matrix.CreateTranslation(this.Position);
+                    }
+                    else
+                    {
+                        matrix *= Matrix.CreateRotationX(MathHelper.ToRadians(this.Rotation.Value.X))
+                         * Matrix.CreateRotationY(MathHelper.ToRadians(this.Rotation.Value.Y))
+                         * Matrix.CreateRotationZ(MathHelper.ToRadians(this.Rotation.Value.Z))
+                         * Matrix.CreateTranslation(this.Position);
                     }
 
-                    // Very alloc heavy
-                    var bounds = BoundingRectangle.CreateFrom(_screenVerts.Select(s => new Point2(s.X, s.Y)).ToArray());
+                    sharedEffect.SetEntityState(matrix, this.texture, 1f, 0f, 2500f, false, Color.White, true);
 
-                    float pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
-                    float limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
+                    graphicsDevice.SetVertexBuffer(_sharedVertexBuffer);
 
-                    // Eww
-                    matrix *= Matrix.CreateTranslation(-this.Position)
-                                 * Matrix.CreateScale(limitY / pixelSizeY)
-                                 * Matrix.CreateTranslation(this.Position);
-                }
-                else
-                {
-                    matrix *= Matrix.CreateRotationX(MathHelper.ToRadians(this.Rotation.Value.X))
-                     * Matrix.CreateRotationY(MathHelper.ToRadians(this.Rotation.Value.Y))
-                     * Matrix.CreateRotationZ(MathHelper.ToRadians(this.Rotation.Value.Z))
-                     * Matrix.CreateTranslation(this.Position);
-                }
-
-                sharedEffect.SetEntityState(matrix, this.texture, 1f, 0f, 2500f, false, Color.White, true);
-
-                graphicsDevice.SetVertexBuffer(_sharedVertexBuffer);
-
-                foreach (var pass in sharedEffect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                    foreach (var pass in sharedEffect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                    }
                 }
             }
 
@@ -179,8 +189,4 @@ namespace Denrage.AdventureModule.Adventure
             }
         }
     }
-
-
 }
-
-

@@ -15,17 +15,17 @@ namespace Denrage.AdventureModule.Adventure
             this.creator = creator;
         }
 
-        public object CreateCuboid(string name, Vector3 position, Vector3 dimension)
-            => this.creator.CreateCuboid(name, position, dimension, this.step, false);
+        public object CreateCuboid(string name, Vector3 position, Vector3 dimension, int mapId)
+            => this.creator.CreateCuboid(name, position, dimension, mapId, this.step, false);
 
-        public object CreateCuboidGlobal(string name, Vector3 position, Vector3 dimension)
-            => this.creator.CreateCuboid(name, position, dimension, this.step, true);
+        public object CreateCuboidGlobal(string name, Vector3 position, Vector3 dimension, int mapId)
+            => this.creator.CreateCuboid(name, position, dimension, mapId, this.step, true);
 
-        public object CreateMarker(string name, Vector3 position, Vector3 rotation)
-            => this.creator.CreateMarker(name, position, rotation, this.step, false);
+        public object CreateMarker(string name, Vector3 position, Vector3 rotation, int mapId)
+            => this.creator.CreateMarker(name, position, rotation, mapId, this.step, false);
 
-        public object CreateMarkerGlobal(string name, Vector3 position, Vector3 rotation)
-            => this.creator.CreateMarker(name, position, rotation, this.step, true);
+        public object CreateMarkerGlobal(string name, Vector3 position, Vector3 rotation, int mapId)
+            => this.creator.CreateMarker(name, position, rotation, mapId, this.step, true);
     }
 
     public class AdventureElementCreator
@@ -45,9 +45,9 @@ namespace Denrage.AdventureModule.Adventure
             }
         }
 
-        public object CreateCuboid(string name, Vector3 position, Vector3 dimension, Step step, bool global)
+        public object CreateCuboid(string name, Vector3 position, Vector3 dimension, int mapId, Step step, bool global)
         {
-            var result = new Cuboid()
+            var result = new Cuboid(mapId)
             {
                 Position = position,
                 Dimensions = dimension,
@@ -77,9 +77,9 @@ namespace Denrage.AdventureModule.Adventure
             return result;
         }
 
-        public object CreateMarker(string name, Vector3 position, Vector3 rotation, Step step, bool global)
+        public object CreateMarker(string name, Vector3 position, Vector3 rotation, int mapId, Step step, bool global)
         {
-            var result = new MarkerElement(position, rotation);
+            var result = new MarkerElement(position, rotation, mapId);
             
             if (global)
             {

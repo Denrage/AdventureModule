@@ -14,6 +14,7 @@ namespace Denrage.AdventureModule.Adventure
         private Vector3 position;
         private Vector3 dimensions;
         private readonly CuboidEntity internalEditEntity;
+        private readonly int mapId;
         private bool entered = false;
 
         public event Action PlayerEntered;
@@ -44,9 +45,10 @@ namespace Denrage.AdventureModule.Adventure
 
         public bool CharacterInside { get; set; } = false;
 
-        public Cuboid()
+        public Cuboid(int mapId)
         {
-            this.internalEditEntity = new CuboidEntity();
+            this.mapId = mapId;
+            this.internalEditEntity = new CuboidEntity(mapId);
             GameService.Graphics.World.AddEntity(this.EditEntity);
         }
 
@@ -57,30 +59,33 @@ namespace Denrage.AdventureModule.Adventure
 
         public override void Update(GameTime gameTime)
         {
-            var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
-
-            var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
-            var lowerY = Math.Min(this.Position.Y, this.Position.Y + this.Dimensions.Y);
-            var lowerZ = Math.Min(this.Position.Z, this.Position.Z + this.Dimensions.Z);
-
-            var higherX = Math.Max(this.Position.X, this.Position.X + this.Dimensions.X);
-            var higherY = Math.Max(this.Position.Y, this.Position.Y + this.Dimensions.Y);
-            var higherZ = Math.Max(this.Position.Z, this.Position.Z + this.Dimensions.Z);
-
-            if (playerPosition.X > lowerX && playerPosition.Y > lowerY && playerPosition.Z > lowerZ &&
-                playerPosition.X < higherX && playerPosition.Y < higherY && playerPosition.Z < higherZ)
+            if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
             {
-                if (!this.entered)
+                var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
+
+                var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
+                var lowerY = Math.Min(this.Position.Y, this.Position.Y + this.Dimensions.Y);
+                var lowerZ = Math.Min(this.Position.Z, this.Position.Z + this.Dimensions.Z);
+
+                var higherX = Math.Max(this.Position.X, this.Position.X + this.Dimensions.X);
+                var higherY = Math.Max(this.Position.Y, this.Position.Y + this.Dimensions.Y);
+                var higherZ = Math.Max(this.Position.Z, this.Position.Z + this.Dimensions.Z);
+
+                if (playerPosition.X > lowerX && playerPosition.Y > lowerY && playerPosition.Z > lowerZ &&
+                    playerPosition.X < higherX && playerPosition.Y < higherY && playerPosition.Z < higherZ)
                 {
-                    this.PlayerEntered?.Invoke();
-                    this.entered = true;
-                    this.CharacterInside = true;
+                    if (!this.entered)
+                    {
+                        this.PlayerEntered?.Invoke();
+                        this.entered = true;
+                        this.CharacterInside = true;
+                    }
                 }
-            }
-            else
-            {
-                this.entered = false;
-                this.CharacterInside = false;
+                else
+                {
+                    this.entered = false;
+                    this.CharacterInside = false;
+                }
             }
         }
 
@@ -114,6 +119,7 @@ namespace Denrage.AdventureModule.Adventure
             };
 
             private BasicEffect effect;
+            private readonly int mapId;
 
             public Vector3 Position { get; set; }
 
@@ -121,48 +127,55 @@ namespace Denrage.AdventureModule.Adventure
 
             public float DrawOrder => default;
 
-            public CuboidEntity()
+            public CuboidEntity(int mapId)
             {
                 var context = GameService.Graphics.LendGraphicsDeviceContext();
                 this.effect = new BasicEffect(context.GraphicsDevice);
                 this.effect.VertexColorEnabled = true;
                 context.Dispose();
+                this.mapId = mapId;
             }
 
             public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
             {
-                this.effect.CurrentTechnique.Passes[0].Apply();
-                var vertices = new List<VertexPositionColor>();
-                var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
-                var color = Color.White;
-
-                var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
-                var lowerY = Math.Min(this.Position.Y, this.Position.Y + this.Dimensions.Y);
-                var lowerZ = Math.Min(this.Position.Z, this.Position.Z + this.Dimensions.Z);
-
-                var higherX = Math.Max(this.Position.X, this.Position.X + this.Dimensions.X);
-                var higherY = Math.Max(this.Position.Y, this.Position.Y + this.Dimensions.Y);
-                var higherZ = Math.Max(this.Position.Z, this.Position.Z + this.Dimensions.Z);
-
-                if (playerPosition.X > lowerX && playerPosition.Y > lowerY && playerPosition.Z > lowerZ &&
-                    playerPosition.X < higherX && playerPosition.Y < higherY && playerPosition.Z < higherZ)
+                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
                 {
-                    color = Color.DarkOrange;
-                }
+                    this.effect.CurrentTechnique.Passes[0].Apply();
+                    var vertices = new List<VertexPositionColor>();
+                    var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
+                    var color = Color.White;
 
-                foreach (var item in this.edges)
-                {
-                    vertices.Add(new VertexPositionColor(this.Position + new Vector3(this.Dimensions.X * item.Start.X, this.Dimensions.Y * item.Start.Y, this.Dimensions.Z * item.Start.Z), color));
-                    vertices.Add(new VertexPositionColor(this.Position + (this.Dimensions * item.End), color));
-                }
+                    var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
+                    var lowerY = Math.Min(this.Position.Y, this.Position.Y + this.Dimensions.Y);
+                    var lowerZ = Math.Min(this.Position.Z, this.Position.Z + this.Dimensions.Z);
 
-                graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices.ToArray(), 0, this.edges.Count());
+                    var higherX = Math.Max(this.Position.X, this.Position.X + this.Dimensions.X);
+                    var higherY = Math.Max(this.Position.Y, this.Position.Y + this.Dimensions.Y);
+                    var higherZ = Math.Max(this.Position.Z, this.Position.Z + this.Dimensions.Z);
+
+                    if (playerPosition.X > lowerX && playerPosition.Y > lowerY && playerPosition.Z > lowerZ &&
+                        playerPosition.X < higherX && playerPosition.Y < higherY && playerPosition.Z < higherZ)
+                    {
+                        color = Color.DarkOrange;
+                    }
+
+                    foreach (var item in this.edges)
+                    {
+                        vertices.Add(new VertexPositionColor(this.Position + new Vector3(this.Dimensions.X * item.Start.X, this.Dimensions.Y * item.Start.Y, this.Dimensions.Z * item.Start.Z), color));
+                        vertices.Add(new VertexPositionColor(this.Position + (this.Dimensions * item.End), color));
+                    }
+
+                    graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices.ToArray(), 0, this.edges.Count());
+                }
             }
 
             public void Update(GameTime gameTime)
             {
-                this.effect.View = GameService.Gw2Mumble.PlayerCamera.View;
-                this.effect.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                {
+                    this.effect.View = GameService.Gw2Mumble.PlayerCamera.View;
+                    this.effect.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+                }
             }
         }
     }

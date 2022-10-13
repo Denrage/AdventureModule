@@ -16,5 +16,3 @@ namespace Denrage.AdventureModule.Adventure
         public virtual void Update(GameTime gameTime) { }
     }
 }
-
-
