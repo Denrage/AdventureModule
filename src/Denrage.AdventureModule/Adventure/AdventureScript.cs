@@ -118,6 +118,7 @@ namespace Denrage.AdventureModule.Adventure
             if (edge.NextNode is null)
             {
                 this.OnClose?.Invoke();
+                this.CurrentNode = this.node;
             }
             else
             {
@@ -129,7 +130,7 @@ namespace Denrage.AdventureModule.Adventure
         public AdventureDialog(DialogGraph.Node node)
         {
             this.node = node;
-            this.CurrentNode = node;
+            this.CurrentNode = this.node;
         }
 
         public void Show()
@@ -153,6 +154,8 @@ namespace Denrage.AdventureModule.Adventure
             this.dialog = dialog;
             this.dialog.CurrentNodeChanged += () => this.UpdateNode();
             this.dialog.OnClose += () => this.Dispose();
+            this.CanClose = false;
+            this.CanCloseWithEscape = false;
 
             this.ConstructWindow(Module.Instance.ContentsManager.GetTexture("background2.png"), new Rectangle(0, 0, 400, 300), new Rectangle(0, 0, 400, 300));
             this.BuildWindow();
@@ -206,6 +209,7 @@ namespace Denrage.AdventureModule.Adventure
                     {
                         Parent = this.responseOptionList,
                         Text = item.Text,
+                        Width = 300,
                     };
 
                     button.Click += (s, e) => this.dialog.MoveNext(item);
@@ -321,6 +325,7 @@ namespace Denrage.AdventureModule.Adventure
             {
                 // Deactivation Logic
                 this.adventureElementCreator.ClearFromStep(this.ActiveStep);
+                this.ActiveStep.Environment.CallMethod("onUnload");
             }
 
             this.ActiveStep = step;
