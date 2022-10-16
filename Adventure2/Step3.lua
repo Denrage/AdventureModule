@@ -29,6 +29,7 @@ function nathanConversation()
     dialog.AddEdge(1, -1, "Auf Wiedersehen");
     dialog.AddEdge(2, -1, "Auf Wiedersehen");
     dialog.AddEdge(1, 2, "Ich habe den Lagerraumschlüssel in deinem Fach gefunden.", function() : bool return key end);
+
     nathanDialog = dialog.Build();
 end
 

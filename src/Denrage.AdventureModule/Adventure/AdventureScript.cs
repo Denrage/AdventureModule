@@ -241,6 +241,25 @@ namespace Denrage.AdventureModule.Adventure
         }
     }
 
+    public class AdventureSynchronizationService
+    {
+        public event Action<string, string, object> PropertyChanged;
+
+        public AdventureSynchronizationService(Adventure adventure)
+        {
+            // Get current state from Server
+            // Adjust step table with that from Server (all ServerVariable Properties)
+            // Activate OnChange Handlers and start sending updates to the server
+            // Add Synchronization with object states (button logic, etc.)
+            // Last one wins
+        }
+
+        public void UpdateStepVariable(string stepName, string propertyName, object propertyValue)
+        {
+
+        }
+    }
+
     public class Adventure
     {
         private readonly Lua engine;
@@ -250,6 +269,7 @@ namespace Denrage.AdventureModule.Adventure
         private readonly LogicBuilderCreator logicCreator;
         private readonly DialogBuilder dialog;
         private readonly Dictionary<string, Step> steps = new Dictionary<string, Step>();
+        private readonly AdventureSynchronizationService synchronizationService;
 
         public event Action StepsChanged;
 
@@ -269,6 +289,8 @@ namespace Denrage.AdventureModule.Adventure
             this.logger = logger;
             this.logicCreator = logicCreator;
             this.dialog = dialog;
+            this.synchronizationService = new AdventureSynchronizationService(this);
+            this.synchronizationService.PropertyChanged += (stepName, property, value) => this.steps[stepName].Environment.SetServerVariable(property, value);
             this.LoadSteps(scriptFolder);
         }
 
@@ -304,6 +326,7 @@ namespace Denrage.AdventureModule.Adventure
             }
             step.Chunk = this.engine.CompileChunk(step.LuaFile, new LuaCompileOptions() { ClrEnabled = true });
             step.Environment = this.engine.CreateEnvironment<AdventureGlobal>();
+            step.Environment.Step = step;
             step.Environment.Character = this.characterInformation;
             step.Environment.StepLogic = new StepLogic(this);
             step.Environment.Logger = this.logger;
@@ -326,6 +349,8 @@ namespace Denrage.AdventureModule.Adventure
                 // Deactivation Logic
                 this.adventureElementCreator.ClearFromStep(this.ActiveStep);
                 this.ActiveStep.Environment.CallMethod("onUnload");
+                this.ActiveStep.State = StepState.Completed;
+                this.ActiveStep.Environment.ServerVariablesChanged -= this.OnStepServerVariableChanged;
             }
 
             this.ActiveStep = step;
@@ -335,7 +360,13 @@ namespace Denrage.AdventureModule.Adventure
             {
                 this.ActiveStep.State = StepState.Running;
                 this.ActiveStep.Environment.CallMethod("onStart", new AdventureElementCreatorWrapper(this.ActiveStep, this.adventureElementCreator));
+                this.ActiveStep.Environment.ServerVariablesChanged += this.OnStepServerVariableChanged;
             }
+        }
+
+        private void OnStepServerVariableChanged(Step step, string propertyName)
+        {
+            this.synchronizationService.UpdateStepVariable(step.Name, propertyName, step.Environment.ServerVariables[propertyName]);
         }
     }
 

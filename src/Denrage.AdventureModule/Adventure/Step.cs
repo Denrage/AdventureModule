@@ -47,12 +47,32 @@ namespace Denrage.AdventureModule.Adventure
 
     public class AdventureGlobal : LuaGlobal
     {
+        private bool ignoreChange = false;
+
         public Step Step { get; set; }
 
-        public AdventureGlobal(Lua lua) 
+        public event Action<Step, string> ServerVariablesChanged;
+
+        public AdventureGlobal(Lua lua)
             : base(lua)
         {
+            this.ServerVariables = new LuaTable();
+            this.ServerVariables.PropertyChanged += (sender, e) =>
+            {
+                if (!ignoreChange)
+                {
+                    this.ServerVariablesChanged?.Invoke(this.Step, e.PropertyName);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Ignored property changed: {e.PropertyName} - {this.ServerVariables[e.PropertyName]}");
+                }
+                //System.Diagnostics.Debug.WriteLine($"{e.PropertyName}: {this.ServerVariables[e.PropertyName]}");
+            };
         }
+
+        [LuaMember]
+        public LuaTable ServerVariables { get; }
 
         [LuaMember]
         public CharacterInformation Character { get; set; }
@@ -70,7 +90,7 @@ namespace Denrage.AdventureModule.Adventure
         public DialogBuilder Dialog { get; set; }
 
         [LuaMember]
-        public Vector3 CreateVector(float x, float y, float z) 
+        public Vector3 CreateVector(float x, float y, float z)
             => new Vector3(x, y, z);
 
         public void ExecuteStep()
@@ -92,7 +112,7 @@ namespace Denrage.AdventureModule.Adventure
 
         //    var result = this.CallMethod(InitializationMethodName);
         //    this.Step.Name = (string)result[0];
-            
+
         //    return this.Step;
         //}
 
@@ -110,9 +130,16 @@ namespace Denrage.AdventureModule.Adventure
             catch (Exception ex)
             {
                 var stackTrace = LuaExceptionData.GetData(ex).FormatStackTrace(0, false);
-                
+
                 throw;
             }
+        }
+
+        public void SetServerVariable(string property, object value)
+        {
+            this.ignoreChange = true;
+            this.ServerVariables[property] = value;
+            this.ignoreChange = false;
         }
     }
 }

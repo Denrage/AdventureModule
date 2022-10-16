@@ -12,3 +12,5 @@ end
 function update()
 end
 
+function onUnload()
+end

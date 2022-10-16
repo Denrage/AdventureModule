@@ -3,9 +3,9 @@
 -- Nathan
 -- Natasha
 
-interactedWithWall = false;
-interactedWithTablet = false;
-talkedWithGamliKey = false;
+ServerVariables.interactedWithWall = false;
+ServerVariables.interactedWithTablet = false;
+ServerVariables.talkedWithGamliKey = false;
 
 function onEmote(emote)
     if robbCuboid:CharacterInside then
@@ -37,7 +37,7 @@ end
 function poisonedTabletConversation()
     local dialog = Dialog:Create();
     dialog.AddNode(1, "Dies scheint ein normaler Eierpunch zu sein, aber bei näherer Betrachtung blubbert dieser und verströmt einen unerwarteten Geruch.");
-    dialog.AddEdge(1, -1, "Schließen", nil, function() interactedWithTablet = true end);
+    dialog.AddEdge(1, -1, "Schließen", nil, function() ServerVariables.interactedWithTablet = true end);
     poisonedTabletDialog = dialog.Build();
 end
 
@@ -51,7 +51,7 @@ end
 function wallConversation()
     local dialog = Dialog:Create();
     dialog.AddNode(1, "Diese Wand scheint neu errichtet worden zu sein. Durch die Dekorationen wurde diese sehr gut in den Raum integriert.");
-    dialog.AddEdge(1, -1, "Schließen", nil, function() interactedWithWall = true end);
+    dialog.AddEdge(1, -1, "Schließen", nil, function() ServerVariables.interactedWithWall = true end);
     wallDialog = dialog.Build();
 end
 
@@ -67,11 +67,12 @@ function gamliConversation()
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "Der Raum hinter der Wand ist lediglich ein Lagerraum, bspw. nicht genutzte Theken oder Getränke");
     dialog.AddNode(3, "Ein Lieferant hatte diesen vorhin gebracht. Nathan nahm ihn an und deponierte diesen im Lagerraum. Nathan hat auch den Schlüssel für diesen.");
-    dialog.AddEdge(1, 2, "Was befindet sich hinter der Wand dahinten?", function() : bool return interactedWithWall end);
-    dialog.AddEdge(1, 3, "Woher kommt der Punch?", function() : bool return interactedWithTablet end);
+    dialog.AddEdge(1, 2, "Was befindet sich hinter der Wand dahinten?", function() : bool return ServerVariables.interactedWithWall end);
+    dialog.AddEdge(1, 3, "Woher kommt der Punch?", function() : bool return ServerVariables.interactedWithTablet end);
     dialog.AddEdge(1, -1, "Auf Wiedersehen");
+    dialog.AddEdge(2, 1, "Zurück");
     dialog.AddEdge(2, -1, "Auf Wiedersehen");
-    dialog.AddEdge(3, -1, "Auf Wiedersehen", nil, function() talkedWithGamliKey = true end);
+    dialog.AddEdge(3, -1, "Auf Wiedersehen", nil, function() ServerVariables.talkedWithGamliKey = true end);
     gamliDialog = dialog.Build();
     --gamliDialog.Show();
 end
@@ -80,7 +81,7 @@ function robbConversation()
     local dialog = Dialog:Create();
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "Ixea hatte diese beiden Tablette geholt, bevor sie gestorben ist. Da ich gerade meine Flöte ausgepackt hatte, sah ich nicht, was passiert ist, als sie umgefallen ist.");
-    dialog.AddEdge(1, 2, "Woher kommt der Eierpunsch?", function() : bool return interactedWithTablet end);
+    dialog.AddEdge(1, 2, "Woher kommt der Eierpunsch?", function() : bool return ServerVariables.interactedWithTablet end);
     dialog.AddEdge(1, -1, "Auf Wiedersehen");
     dialog.AddEdge(2, -1, "Auf Wiedersehen");
     robbDialog = dialog.Build();
@@ -92,8 +93,8 @@ function nathanConversation()
     dialog.AddNode(2, "Ich hatte den Punch angenommen und im Lagerraum deponiert.");
     dialog.AddNode(3, "Ich kann den Schlüssel gerade nicht finden, dabei hatte ich ihn gerade noch irgendwo.");
     -- dialog.AddEdge(2, 1, "Gut", function() : bool return true end);
-    dialog.AddEdge(1, 2, "Was hattest du mit dem Punch gemacht?", function() : bool return interactedWithTablet end);
-    dialog.AddEdge(1, 3, "Gamli meinte, du hättest den Schlüssel für den Laggerraum, könnte ich diesen haben?", function() : bool return talkedWithGamliKey end);
+    dialog.AddEdge(1, 2, "Was hattest du mit dem Punch gemacht?", function() : bool return ServerVariables.interactedWithTablet end);
+    dialog.AddEdge(1, 3, "Gamli meinte, du hättest den Schlüssel für den Laggerraum, könnte ich diesen haben?", function() : bool return ServerVariables.talkedWithGamliKey end);
     dialog.AddEdge(1, -1, "Auf Wiedersehen");
     dialog.AddEdge(2, -1, "Auf Wiedersehen");
     dialog.AddEdge(3, -1, "Auf Wiedersehen");
