@@ -15,7 +15,7 @@ public class TcpService : IDisposable
 
     public event Action<Guid> ClientConnected;
 
-    public TcpService(Func<DrawObjectService> getDrawObjectService, UserManagementService userManagementService, Func<PlayerMumbleService> playerMumbleService)
+    public TcpService(Func<DrawObjectService> getDrawObjectService, Func<SynchronizationService> getSynchronizationService, UserManagementService userManagementService, Func<PlayerMumbleService> playerMumbleService)
     {
         this.cancellationTokenSource = new CancellationTokenSource();
         this.server = new TcpServer();
@@ -34,6 +34,9 @@ public class TcpService : IDisposable
             { typeof(PlayerMumbleMessage).FullName, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
             { typeof(PingMessage).FullName, (typeof(PingMessage), new PingMessageHandler(this)) },
             { typeof(LoginMessage).FullName, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
+            { typeof(StateChangedMessage<Libs.Messages.Data.DialogState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.DialogState>), new StateChangedMessageHandler<Libs.Messages.Data.DialogState>(getSynchronizationService)) },
+            { typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>), new StateChangedMessageHandler<Libs.Messages.Data.LuaVariablesState>(getSynchronizationService)) },
+            { typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>), new StateChangedMessageHandler<Libs.Messages.Data.AdventureState>(getSynchronizationService)) },
         };
         this.userManagementService = userManagementService;
     }

@@ -8,8 +8,5 @@ namespace Denrage.AdventureModule.Adventure
 
         void FlipNinetyDegrees();
     }
-
-
 }
-
 

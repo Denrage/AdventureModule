@@ -60,9 +60,7 @@ namespace Denrage.AdventureModule.Entities
             const float maxSize = 2048f;
             var position = this.Position;
 
-
             var matrix = Matrix.CreateScale(1f, 1f, 1f);
-
 
             matrix *= Matrix.CreateBillboard(position,
                                       new Vector3(camera.Position.X,
@@ -101,7 +99,6 @@ namespace Denrage.AdventureModule.Entities
                 pass.Apply();
                 graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
             }
-
         }
 
         public void Update(GameTime gameTime)

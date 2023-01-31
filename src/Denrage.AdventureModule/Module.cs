@@ -28,6 +28,7 @@ namespace Denrage.AdventureModule
 
         public static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DrawObjectService drawObjectService;
+        private readonly SynchronizationService synchronizationService;
         private readonly TcpService tcpService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
@@ -48,7 +49,7 @@ namespace Denrage.AdventureModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
             Instance = this;
-            this.tcpService = new TcpService(() => this.drawObjectService, () => this.loginService, () => this.playerMumbleService);
+            this.tcpService = new TcpService(() => this.drawObjectService, () => this.synchronizationService, () => this.loginService, () => this.playerMumbleService);
             this.loginService = new LoginService(this.tcpService);
             this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService);
             this.drawObjectService = new DrawObjectService(this.tcpService);
@@ -102,6 +103,8 @@ namespace Denrage.AdventureModule
                         oldObject.Size = newObject.Size;
                     }
                 });
+
+            this.synchronizationService = new SynchronizationService(this.tcpService);
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -222,31 +225,8 @@ namespace Denrage.AdventureModule
 
             //window2.Initialize();
             //window2.Show();
-            this.adventureScript = new AdventureScript();
-
-            //var buttonOne = new TestMarker();
-            //var buttonTwo = new TestMarker();
-            //var buttonThree = new TestMarker();
-            //var buttonFour = new TestMarker();
-            //var buttonFive = new TestMarker();
-
-            //var buttonOrderBuilder = new ButtonOrderBuilder();
-            //buttonOrderBuilder.Finished += () => System.Diagnostics.Debug.WriteLine("Button order finished");
-            //buttonOrderBuilder.Add(buttonOne);
-            //buttonOrderBuilder.Add(buttonTwo, 2);
-            //buttonOrderBuilder.Add(buttonThree);
-            //buttonOrderBuilder.Add(buttonFour);
-            //buttonOrderBuilder.Add(buttonFive);
-            //buttonOrderBuilder.Build();
-            //buttonOne.Interact();
-            //await Task.Delay(TimeSpan.FromSeconds(1));
-            //buttonTwo.Interact();
-            //buttonFour.Interact();
-            //buttonOne.Interact();
-            //buttonTwo.Interact();
-            //buttonThree.Interact();
-            //buttonFour.Interact();
-            //buttonFive.Interact();
+            var dialog = new DialogBuilder(this.synchronizationService);
+            this.adventureScript = new AdventureScript(dialog, this.synchronizationService);
         }
 
         protected override void Update(GameTime gameTime)
@@ -269,6 +249,5 @@ namespace Denrage.AdventureModule
 
             // All static members must be manually unset
         }
-
     }
 }

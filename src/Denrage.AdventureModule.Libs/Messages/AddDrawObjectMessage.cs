@@ -4,7 +4,6 @@ using System.Text;
 
 namespace Denrage.AdventureModule.Libs.Messages
 {
-
     public class AddDrawObjectMessage<TDrawObject> : Message
         where TDrawObject : DrawObject
     {

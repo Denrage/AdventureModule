@@ -15,14 +15,14 @@ function onEmote(emote)
 end
 
 function cabinetConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test20");
     dialog.AddNode(1, "In der Vitrine ist ein Fach mit dem Namen \"Nathan\". In diesem befindet sich ein großer Schlüssel");
     dialog.AddEdge(1, -1, "Schließen", nil, function() key = true end);
     cabinetDialog = dialog.Build();
 end
 
 function nathanConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test21");
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "*Nathan versucht zu fliehen, Ihr konntet ihn gerade so noch festhalten.* Ja, ich hab den Punch vergiftet. Ein Elonier kam zu mir und bedrohte mich und meine Familie, ich habe aus Angst gehandelt. Ich wusste nicht, dass Ixea das Ziel sein sollte!");
     -- dialog.AddEdge(2, 1, "Gut", function() : bool return true end);

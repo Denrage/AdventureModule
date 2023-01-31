@@ -21,14 +21,14 @@ function onEmote(emote)
 end
 
 function cabinetConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test10");
     dialog.AddNode(1, "Die Vitrine scheint verschlossen zu sein. Natasha macht einen darauf aufmerksam, dass Gamli den Schlüssel hinter der Theke aufbewahrt.");
     dialog.AddEdge(1, -1, "Schließen", nil, function() gamliKey = true end);
     cabinetDialog = dialog.Build();
 end
 
 function gamliConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test11");
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "Ich erinnere mich nicht an solch eine Teekanne, diese gehört hier definitiv nicht. Unfassbar, dass jemand in meiner Schänke vergiftet wurde und dann auch noch Offizierin Ixea. Ich bin ratlos, wer dafür verantwortlich sein könne, aber alle meine Mitarbeiter vertraue ich wie der eigenen Familie.");
     dialog.AddNode(3, "Kein Problem, hier ist der Schlüssel.")
@@ -41,7 +41,7 @@ function gamliConversation()
 end
 
 function nathanConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test12");
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "Ehhh, also, diese Kanne, da, die habe ich noch nie gesehen, wirklich. Ich habe nur den Punch im Laggerraum deponiert, ich weiß nicht, wie lange die da schon ist. Ich weiß, dass mich das verdächtigt macht, aber ich habe damit wirklich nichts zu tun!");
     -- dialog.AddEdge(2, 1, "Gut", function() : bool return true end);
@@ -52,7 +52,7 @@ function nathanConversation()
 end
 
 function natashaConversation()
-    local dialog = Dialog:Create();
+    local dialog = Dialog:Create("test13");
     dialog.AddNode(1, "Hallo");
     dialog.AddNode(2, "Diese Teekanne habe ich noch nie gesehen. Nathan hatte sich aber dahinten an der Vitrine nervös und seltsam verhalten. Wir bewahren da unsere Gegenstände auf, während wir arbeiten, er selbst ist aber noch mitten in seiner Schicht und hat eigentlich keinen Grund, an die Vitrine zu gehen. Er hat sich durchgängig umgeschaut, um sicherzugehen, dass er nicht beobachtet wird.");
     dialog.AddEdge(1, 2, "Hast du diese Teekanne jemals gesehen?");

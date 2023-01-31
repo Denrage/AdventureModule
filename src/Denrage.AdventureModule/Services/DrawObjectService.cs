@@ -73,7 +73,6 @@ namespace Denrage.AdventureModule.Services
                     await this.tcpService.Send(this.drawObjectTypeToMessageType[typeof(T)].AddMessage(drawObjects), ct);
                 }
             }
-
         }
 
         public async Task Remove<T>(IEnumerable<Guid> drawObject, bool fromServer, CancellationToken ct)
@@ -161,7 +160,6 @@ namespace Denrage.AdventureModule.Services
                 {
                     await this.tcpService.Send(this.drawObjectTypeToMessageType[item.Key].UpdateMessage(item.Value), ct);
                 }
-
             }
         }
 

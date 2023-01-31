@@ -1,4 +1,5 @@
-﻿using Denrage.AdventureModule.Libs.Messages;
+﻿using Denrage.AdventureModule.Adventure;
+using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Libs.Messages.Handler;
 using Denrage.AdventureModule.MessageHandlers;
@@ -25,7 +26,7 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Connected;
 
-        public TcpService(Func<DrawObjectService> drawObjectService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
+        public TcpService(Func<DrawObjectService> drawObjectService, Func<SynchronizationService> getSynchronizationService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
         {
             this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
             {
@@ -39,6 +40,9 @@ namespace Denrage.AdventureModule.Services
                 { typeof(PlayersMumbleMessage).FullName, (typeof(PlayersMumbleMessage), new PlayersMumbleMessageHandler(loginService, playerMumbleService)) },
                 { typeof(PingResponseMessage).FullName, (typeof(PingResponseMessage), null) },
                 { typeof(LoginResponseMessage).FullName, (typeof(LoginResponseMessage), null) },
+                { typeof(StateChangedMessage<DialogState>).FullName, (typeof(StateChangedMessage<DialogState>), new StateChangedMessageHandler<DialogState>(getSynchronizationService)) },
+                { typeof(StateChangedMessage<LuaVariablesState>).FullName, (typeof(StateChangedMessage<LuaVariablesState>), new StateChangedMessageHandler<LuaVariablesState>(getSynchronizationService)) },
+                { typeof(StateChangedMessage<AdventureState>).FullName, (typeof(StateChangedMessage<AdventureState>), new StateChangedMessageHandler<AdventureState>(getSynchronizationService)) },
             };
         }
 

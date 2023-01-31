@@ -16,8 +16,5 @@ namespace Denrage.AdventureModule.Adventure
             this.EmoteUsed?.Invoke("hello world");
         }
     }
-
-
 }
-
 

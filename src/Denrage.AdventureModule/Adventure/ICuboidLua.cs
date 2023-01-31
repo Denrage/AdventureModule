@@ -12,8 +12,5 @@ namespace Denrage.AdventureModule.Adventure
 
         void Test();
     }
-
-
 }
-
 

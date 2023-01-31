@@ -131,8 +131,5 @@ namespace Denrage.AdventureModule.Adventure
             }
         }
     }
-
-
 }
-
 

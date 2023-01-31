@@ -4,8 +4,5 @@
     {
         public void Log(object message) => System.Diagnostics.Debug.WriteLine(message.ToString());
     }
-
-
 }
-
 

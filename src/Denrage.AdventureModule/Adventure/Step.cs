@@ -40,9 +40,8 @@ namespace Denrage.AdventureModule.Adventure
 
         public void NextStep(string name)
         {
-            this.adventure.ActivateStep(this.adventure.Steps[name]);
+            this.adventure.MoveToStep(this.adventure.Steps[name]);
         }
-
     }
 
     public class AdventureGlobal : LuaGlobal
@@ -51,7 +50,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public Step Step { get; set; }
 
-        public event Action<Step, string> ServerVariablesChanged;
+        public event Action<Step> ServerVariablesChanged;
 
         public AdventureGlobal(Lua lua)
             : base(lua)
@@ -61,7 +60,7 @@ namespace Denrage.AdventureModule.Adventure
             {
                 if (!ignoreChange)
                 {
-                    this.ServerVariablesChanged?.Invoke(this.Step, e.PropertyName);
+                    this.ServerVariablesChanged?.Invoke(this.Step);
                 }
                 else
                 {
@@ -72,7 +71,10 @@ namespace Denrage.AdventureModule.Adventure
         }
 
         [LuaMember]
-        public LuaTable ServerVariables { get; }
+        public LuaTable ServerVariables { get; } = new LuaTable();
+
+        [LuaMember]
+        public LuaTable ClientVariables { get; } = new LuaTable();
 
         [LuaMember]
         public CharacterInformation Character { get; set; }
@@ -98,24 +100,6 @@ namespace Denrage.AdventureModule.Adventure
 
         }
 
-        //public Step InitializeStep(string luaFile)
-        //{
-        //    this.Step = new Step
-        //    {
-        //        Environment = this,
-        //        LuaFile = luaFile,
-        //        Chunk = this.Lua.CompileChunk(luaFile, new LuaCompileOptions() { ClrEnabled = true }),
-        //        State = StepState.NotStarted,
-        //    };
-
-        //    _ = this.DoChunk(this.Step.Chunk);
-
-        //    var result = this.CallMethod(InitializationMethodName);
-        //    this.Step.Name = (string)result[0];
-
-        //    return this.Step;
-        //}
-
         public LuaResult CallMethod(string methodName, params object[] args)
         {
             return this.WrapCall(() => this.CallMemberDirect(methodName, args));
@@ -135,11 +119,14 @@ namespace Denrage.AdventureModule.Adventure
             }
         }
 
-        public void SetServerVariable(string property, object value)
+        public void SetServerVariables(KeyValuePair<string, object>[] variables)
         {
-            this.ignoreChange = true;
-            this.ServerVariables[property] = value;
-            this.ignoreChange = false;
+            this.ClientVariables.Clear();
+
+            foreach (var item in variables)
+            {
+                this.ClientVariables[item.Key] = item.Value;
+            }
         }
     }
 }

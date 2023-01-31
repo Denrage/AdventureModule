@@ -10,8 +10,5 @@ namespace Denrage.AdventureModule.Adventure
 
         Vector3 Position { get; }
     }
-
-
 }
-
 
