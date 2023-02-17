@@ -1,4 +1,5 @@
 ﻿using Blish_HUD;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Gw2Sharp.Models;
 
@@ -15,10 +16,10 @@ namespace Denrage.AdventureModule.Helper
         public static bool Equal(this Vector2 messageVector, Coordinates2 coordinates)
             => messageVector.X == coordinates.X && messageVector.Y == coordinates.Y;
 
-        public static bool Equal(this MumbleInformation mumbleInformation, Gw2MumbleService mumbleService)
+        public static bool Equal(this MumbleInformation mumbleInformation, IGw2Mumble mumbleService)
             => mumbleInformation != null && mumbleInformation.CameraPosition.Equal(mumbleService.PlayerCamera.Position) &&
                 mumbleInformation.MapPosition.Equal(mumbleService.PlayerCharacter.Position) &&
-                mumbleInformation.ContinentPosition.Equal(mumbleService.UI.MapPosition) &&
+                mumbleInformation.ContinentPosition.Equal(mumbleService.UserInterface.MapPosition) &&
                 mumbleInformation.MapId == mumbleService.CurrentMap.Id &&
                 mumbleInformation.CameraDirection.Equal(mumbleService.PlayerCamera.Forward) &&
                 mumbleInformation.CharacterName == mumbleService.PlayerCharacter.Name;
@@ -60,13 +61,13 @@ namespace Denrage.AdventureModule.Helper
                 Z = vector.Z,
             };
 
-        public static MumbleInformation ToInformation(this Gw2MumbleService service)
+        public static MumbleInformation ToInformation(this IGw2Mumble service)
             => new MumbleInformation
             {
                 CameraDirection = service.PlayerCamera.Forward.ToMessageVector(),
                 CharacterName = service.PlayerCharacter.Name,
                 CameraPosition = service.PlayerCamera.Position.ToMessageVector(),
-                ContinentPosition = service.UI.MapPosition.ToMessageVector(),
+                ContinentPosition = service.UserInterface.MapPosition.ToMessageVector(),
                 MapId = service.CurrentMap.Id,
                 MapPosition = service.PlayerCharacter.Position.ToMessageVector(),
             };

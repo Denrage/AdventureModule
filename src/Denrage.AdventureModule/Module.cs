@@ -1,11 +1,15 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Controls;
 using Blish_HUD.Input;
 using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
+using Denrage.AdventureModule.Adventure;
 using Denrage.AdventureModule.Helper;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
+using Denrage.AdventureModule.Mock;
 using Denrage.AdventureModule.Services;
 using Denrage.AdventureModule.UserInterface;
 using Denrage.AdventureModule.UserInterface.Windows;
@@ -26,10 +30,14 @@ namespace Denrage.AdventureModule
 
         public static readonly Logger Logger = Logger.GetLogger<Module>();
         private readonly DrawObjectService drawObjectService;
+        private readonly SynchronizationService synchronizationService;
         private readonly TcpService tcpService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
+        private readonly IGw2Mumble gw2Mumble;
         private SettingEntry<KeyBinding> placeMapMarkerKeybind;
+        private AdventureScript adventureScript;
+        private SettingEntry<KeyBinding> emoteKeybind;
 
         internal static Module Instance { get; private set; }
 
@@ -44,9 +52,12 @@ namespace Denrage.AdventureModule
         public Module([Import("ModuleParameters")] ModuleParameters moduleParameters) : base(moduleParameters)
         {
             Instance = this;
-            this.tcpService = new TcpService(() => this.drawObjectService, () => this.loginService, () => this.playerMumbleService);
+            this.gw2Mumble = new Gw2MumbleWrapper();
+            //this.gw2Mumble = GameService.Gw2Mumble.IsAvailable ? new Gw2MumbleWrapper() : (IGw2Mumble)new MockMumble();
+
+            this.tcpService = new TcpService(() => this.drawObjectService, () => this.synchronizationService, () => this.loginService, () => this.playerMumbleService);
             this.loginService = new LoginService(this.tcpService);
-            this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService);
+            this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService, this.gw2Mumble);
             this.drawObjectService = new DrawObjectService(this.tcpService);
             
             this.drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>, UpdateDrawObjectMessage<Line>>(
@@ -98,6 +109,8 @@ namespace Denrage.AdventureModule
                         oldObject.Size = newObject.Size;
                     }
                 });
+
+            this.synchronizationService = new SynchronizationService(this.tcpService);
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -105,6 +118,10 @@ namespace Denrage.AdventureModule
             this.placeMapMarkerKeybind = settings.DefineSetting("DefaultMountBinding", new KeyBinding(Keys.L), () => "Map Marker", () => "");
             this.placeMapMarkerKeybind.Value.Enabled = true;
             this.placeMapMarkerKeybind.Value.Activated += async delegate { await PlaceMapMarker(); };
+
+            this.emoteKeybind = settings.DefineSetting("EmoteBinding", new KeyBinding(Keys.K), () => "Emote", () => "");
+            this.emoteKeybind.Value.Enabled = true;
+            this.emoteKeybind.Value.Activated += delegate { this.adventureScript.EmoteUsed(); };
         }
 
         private async Task PlaceMapMarker()
@@ -114,7 +131,7 @@ namespace Denrage.AdventureModule
                 return;
             }
 
-            if (!GameService.Gw2Mumble.UI.IsMapOpen)
+            if (!this.gw2Mumble.UserInterface.IsMapOpen)
             {
                 return;
             }
@@ -131,7 +148,7 @@ namespace Denrage.AdventureModule
             {
                 await this.drawObjectService.Add(new[] {new MapMarker
                 {
-                    Position = MapUtils.ScreenToContinentCoords(mousePosition.ToVector2()).ToMessageVector(),
+                    Position = MapUtils.ScreenToContinentCoords(mousePosition.ToVector2(), this.gw2Mumble).ToMessageVector(),
                     Username = this.loginService.Name,
                     Id = Guid.NewGuid(),
                 } }, false, default);
@@ -145,8 +162,8 @@ namespace Denrage.AdventureModule
             var maxX = screenPosition.X + 10;
             var maxY = screenPosition.Y + 10;
 
-            var topLeft = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(x, y));
-            var bottomRight = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(maxX, maxY));
+            var topLeft = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(x, y), this.gw2Mumble);
+            var bottomRight = MapUtils.ScreenToContinentCoords(new Microsoft.Xna.Framework.Vector2(maxX, maxY), this.gw2Mumble);
 
             foreach (var marker in this.drawObjectService.GetDrawObjects<MapMarker>())
             {
@@ -166,7 +183,7 @@ namespace Denrage.AdventureModule
 
         protected override async Task LoadAsync()
         {
-            GameService.Graphics.World.AddEntity(new Entities.MarkerEntity(this.ContentsManager.GetTexture("marker.png")));
+            GameService.Graphics.World.AddEntity(new Entities.MarkerEntity(this.ContentsManager.GetTexture("marker.png"), this.gw2Mumble));
             this.tcpService.Connected += () => Logger.Info("Connected");
             this.tcpService.Disconnected += async () =>
             {
@@ -193,8 +210,8 @@ namespace Denrage.AdventureModule
             //window.Initialize(this.drawObjectService, this.loginService);
             //window.Show();
 
-            var markerContainer = new MapMarkerContainer(this.drawObjectService);
-            var playerMarker = new PlayerMarkerControl(this.playerMumbleService);
+            var markerContainer = new MapMarkerContainer(this.drawObjectService, this.gw2Mumble);
+            var playerMarker = new PlayerMarkerControl(this.playerMumbleService, this.gw2Mumble);
 
             //var window2 = new ImageWindow(this.ContentsManager.GetTexture("testimage.jpg"))
             //{
@@ -204,16 +221,25 @@ namespace Denrage.AdventureModule
             //    Location = new Point(400, 400),
             //};
 
-            var window2 = new ImageViewerWindow()
-            {
-                Parent = GraphicsService.Graphics.SpriteScreen,
-                Width = 100,
-                Height = 800,
-                Location = new Point(400, 400),
-            };
+            //var window2 = new ImageViewerWindow()
+            //{
+            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //    Width = 100,
+            //    Height = 800,
+            //    Location = new Point(400, 400),
+            //};
 
-            window2.Initialize();
-            window2.Show();
+            //window2.Initialize();
+            //window2.Show();
+            var dialog = new DialogBuilder(this.synchronizationService);
+            this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.gw2Mumble);
+            //File.WriteAllText("mumble.json", Newtonsoft.Json.JsonConvert.SerializeObject(GameService.Gw2Mumble.RawClient));
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            this.adventureScript?.Update(gameTime);
+            base.Update(gameTime);
         }
 
         protected override void OnModuleLoaded(EventArgs e)
@@ -230,6 +256,5 @@ namespace Denrage.AdventureModule
 
             // All static members must be manually unset
         }
-
     }
 }

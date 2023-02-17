@@ -4,6 +4,51 @@ using System.Collections.Concurrent;
 
 namespace Denrage.AdventureModule.Server.Services;
 
+public class SynchronizationService
+{
+    private readonly TcpService tcpService;
+    private readonly UserManagementService userManagementService;
+    private readonly ConcurrentDictionary<Guid, IState> currentStates = new ConcurrentDictionary<Guid, IState>();
+
+    public SynchronizationService(TcpService tcpService, UserManagementService userManagementService)
+    {
+        this.tcpService = tcpService;
+        this.userManagementService = userManagementService;
+        //userManagementService.LoggedIn += id =>
+        //{
+        //    var user = userManagementService.GetUserFromConnectionId(id);
+        //    foreach (var item in this.currentStates)
+        //    {
+        //        if (item.Value is DialogState dialogState)
+        //        {
+        //            _ = this.tcpService.SendMessage(id, new StateChangedMessage<DialogState>() { State = dialogState }, default);
+        //        }
+        //    }
+        //};
+    }
+
+    public async Task StateChanged(IState state, Guid clientId, CancellationToken ct)
+    {
+        _ = this.currentStates.TryAdd(state.Id, state);
+        var group = this.userManagementService.GetGroup(this.userManagementService.GetUserFromConnectionId(clientId));
+
+        if (state is DialogState dialogState)
+        {
+            await this.tcpService.SendToGroup(group, new StateChangedMessage<DialogState>() { State = dialogState }, ct);
+        }
+
+        if (state is LuaVariablesState variableState)
+        {
+            await this.tcpService.SendToGroup(group, new StateChangedMessage<LuaVariablesState>() { State = variableState }, ct);
+        }
+
+        if (state is AdventureState adventureState)
+        {
+            await this.tcpService.SendToGroup(group, new StateChangedMessage<AdventureState>() { State = adventureState }, ct);
+        }
+    }
+}
+
 public class DrawObjectService
 {
     private ConcurrentDictionary<Type, ConcurrentDictionary<Guid, DrawObject>> drawObjects = new();
@@ -11,7 +56,7 @@ public class DrawObjectService
         Func<IEnumerable<object>, Message> AddMessage,
         Func<IEnumerable<Guid>, Message> RemoveMessage,
         Func<IEnumerable<object>, Message> UpdateMessage,
-        Action<object, object> UpdateObject)> drawObjectTypeToMessageType = new ();
+        Action<object, object> UpdateObject)> drawObjectTypeToMessageType = new();
 
     private readonly TcpService tcpService;
 

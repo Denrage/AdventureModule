@@ -12,11 +12,11 @@ namespace MyApp // Note: actual namespace depends on the project name.
         {
             TcpService service = null;
             DrawObjectService drawObjectService = null;
+            SynchronizationService synchronizationService = null;
             PlayerMumbleService playerMumbleService = null;
             var userManagementService = new UserManagementService();
-            service = new TcpService(() => drawObjectService, userManagementService, () => playerMumbleService);
+            service = new TcpService(() => drawObjectService, () => synchronizationService, userManagementService, () => playerMumbleService);
             drawObjectService = new DrawObjectService(service, userManagementService);
-            
             drawObjectService.Register<Line, AddDrawObjectMessage<Line>, RemoveDrawObjectMessage<Line>, UpdateDrawObjectMessage<Line>>(
                 lines => new AddDrawObjectMessage<Line>() { DrawObjects = lines.ToArray() }, 
                 ids => new RemoveDrawObjectMessage<Line>() { Ids = ids.ToArray() }, 
@@ -62,6 +62,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
                 });
 
             playerMumbleService = new PlayerMumbleService(service, userManagementService);
+            synchronizationService = new SynchronizationService(service, userManagementService);
             service.Initialize().Wait();
 
             Console.WriteLine("Server started");

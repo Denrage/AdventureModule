@@ -1,4 +1,5 @@
 ﻿using Blish_HUD;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using System;
 
@@ -17,49 +18,49 @@ namespace Denrage.AdventureModule.UserInterface
         private static int GetCompassOffset(float curr, float min, float max)
             => (int)Math.Round(MathUtils.Scale(curr, min, max, MinCompassOffset, MaxCompassOffset));
 
-        public static Rectangle GetMapBounds()
+        public static Rectangle GetMapBounds(IGw2Mumble gw2Mumble)
         {
-            if (GameService.Gw2Mumble.UI.CompassSize.Width < 1 || GameService.Gw2Mumble.UI.CompassSize.Height < 1)
+            if (gw2Mumble.UserInterface.CompassSize.Width < 1 || gw2Mumble.UserInterface.CompassSize.Height < 1)
             {
                 return default;
             }
 
-            if (GameService.Gw2Mumble.UI.IsMapOpen)
+            if (gw2Mumble.UserInterface.IsMapOpen)
             {
                 return new Rectangle(Point.Zero, GameService.Graphics.SpriteScreen.Size);
             }
 
-            var offsetWidth = GetCompassOffset(GameService.Gw2Mumble.UI.CompassSize.Width, MinCompassWidth, MaxCompassWidth);
-            var offsetHeight = GetCompassOffset(GameService.Gw2Mumble.UI.CompassSize.Height, MinCompassHeight, MaxCompassHeight);
+            var offsetWidth = GetCompassOffset(gw2Mumble.UserInterface.CompassSize.Width, MinCompassWidth, MaxCompassWidth);
+            var offsetHeight = GetCompassOffset(gw2Mumble.UserInterface.CompassSize.Height, MinCompassHeight, MaxCompassHeight);
 
             return new Rectangle(
-                GameService.Graphics.SpriteScreen.Width - GameService.Gw2Mumble.UI.CompassSize.Width - offsetWidth,
-                GameService.Gw2Mumble.UI.IsCompassTopRight
+                GameService.Graphics.SpriteScreen.Width - gw2Mumble.UserInterface.CompassSize.Width - offsetWidth,
+                gw2Mumble.UserInterface.IsCompassTopRight
                     ? 0
-                    : GameService.Graphics.SpriteScreen.Height - GameService.Gw2Mumble.UI.CompassSize.Height - offsetHeight - CompassSeparation,
-                GameService.Gw2Mumble.UI.CompassSize.Width + offsetWidth,
-                GameService.Gw2Mumble.UI.CompassSize.Height + offsetHeight);
+                    : GameService.Graphics.SpriteScreen.Height - gw2Mumble.UserInterface.CompassSize.Height - offsetHeight - CompassSeparation,
+                gw2Mumble.UserInterface.CompassSize.Width + offsetWidth,
+                gw2Mumble.UserInterface.CompassSize.Height + offsetHeight);
         }
 
-        public static Vector2 ContinentToMapScreen(Vector2 continentCoords)
+        public static Vector2 ContinentToMapScreen(Vector2 continentCoords, IGw2Mumble gw2Mumble)
         {
-            var mapCenter = new Vector2((float)GameService.Gw2Mumble.UI.MapCenter.X, (float)GameService.Gw2Mumble.UI.MapCenter.Y);
+            var mapCenter = new Vector2((float)gw2Mumble.UserInterface.MapCenter.X, (float)gw2Mumble.UserInterface.MapCenter.Y);
             var mapRotation = Matrix.CreateRotationZ(
-                GameService.Gw2Mumble.UI.IsCompassRotationEnabled && !GameService.Gw2Mumble.UI.IsMapOpen
-                    ? (float)GameService.Gw2Mumble.UI.CompassRotation
+                gw2Mumble.UserInterface.IsCompassRotationEnabled && !gw2Mumble.UserInterface.IsMapOpen
+                    ? (float)gw2Mumble.UserInterface.CompassRotation
                     : 0);
 
-            var screenBounds = GetMapBounds();
-            var scale = (float)(GameService.Gw2Mumble.UI.MapScale * 0.897);  // Magic number to transform scale
+            var screenBounds = GetMapBounds(gw2Mumble);
+            var scale = (float)(gw2Mumble.UserInterface.MapScale * 0.897);  // Magic number to transform scale
             var boundsCenter = screenBounds.Location.ToVector2() + screenBounds.Size.ToVector2() / 2f;
 
             return Vector2.Transform((continentCoords - mapCenter) / scale, mapRotation) + boundsCenter;
         }
 
-        public static Vector2 ScreenToContinentCoords(Vector2 screenCoordinates)
+        public static Vector2 ScreenToContinentCoords(Vector2 screenCoordinates, IGw2Mumble gw2Mumble)
         {
-            var mapCenter = GameService.Gw2Mumble.UI.MapCenter;
-            var scale = (float)GameService.Gw2Mumble.UI.MapScale * 0.897f;
+            var mapCenter = gw2Mumble.UserInterface.MapCenter;
+            var scale = (float)gw2Mumble.UserInterface.MapScale * 0.897f;
             var boundsCenter = GameService.Graphics.SpriteScreen.Size.ToVector2() / 2f;
             return ((screenCoordinates - boundsCenter) * scale) + new Vector2((float)mapCenter.X, (float)mapCenter.Y);
         }
