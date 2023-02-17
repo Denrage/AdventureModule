@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,6 +17,7 @@ namespace Denrage.AdventureModule.Adventure
         private readonly CuboidEntity debugEntity;
         private readonly int mapId;
         private readonly AdventureDebugService debugService;
+        private readonly IGw2Mumble gw2Mumble;
         private bool entered = false;
 
         public event Action PlayerEntered;
@@ -44,11 +46,12 @@ namespace Denrage.AdventureModule.Adventure
 
         public bool CharacterInside { get; set; } = false;
 
-        public Cuboid(int mapId, AdventureDebugService debugService)
+        public Cuboid(int mapId, AdventureDebugService debugService, IGw2Mumble gw2Mumble)
         {
             this.mapId = mapId;
             this.debugService = debugService;
-            this.debugEntity = new CuboidEntity(mapId);
+            this.gw2Mumble = gw2Mumble;
+            this.debugEntity = new CuboidEntity(mapId, gw2Mumble);
 
             this.debugService.DebugActivated += () => GameService.Graphics.World.AddEntity(this.debugEntity);
             this.debugService.DebugDeactivated += () => GameService.Graphics.World.RemoveEntity(this.debugEntity);
@@ -66,9 +69,9 @@ namespace Denrage.AdventureModule.Adventure
 
         public override void Update(GameTime gameTime)
         {
-            if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+            if (this.mapId == this.gw2Mumble.CurrentMap.Id)
             {
-                var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
+                var playerPosition = this.gw2Mumble.PlayerCharacter.Position;
 
                 var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
                 var lowerY = Math.Min(this.Position.Y, this.Position.Y + this.Dimensions.Y);
@@ -130,6 +133,7 @@ namespace Denrage.AdventureModule.Adventure
 
             private BasicEffect effect;
             private readonly int mapId;
+            private readonly IGw2Mumble gw2Mumble;
 
             public Vector3 Position { get; set; }
 
@@ -137,22 +141,23 @@ namespace Denrage.AdventureModule.Adventure
 
             public float DrawOrder => default;
 
-            public CuboidEntity(int mapId)
+            public CuboidEntity(int mapId, IGw2Mumble gw2Mumble)
             {
                 var context = GameService.Graphics.LendGraphicsDeviceContext();
                 this.effect = new BasicEffect(context.GraphicsDevice);
                 this.effect.VertexColorEnabled = true;
                 context.Dispose();
                 this.mapId = mapId;
+                this.gw2Mumble = gw2Mumble;
             }
 
             public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
             {
-                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                if (this.mapId == this.gw2Mumble.CurrentMap.Id)
                 {
                     this.effect.CurrentTechnique.Passes[0].Apply();
                     var vertices = new List<VertexPositionColor>();
-                    var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
+                    var playerPosition = this.gw2Mumble.PlayerCharacter.Position;
                     var color = Color.White;
 
                     var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
@@ -181,10 +186,10 @@ namespace Denrage.AdventureModule.Adventure
 
             public void Update(GameTime gameTime)
             {
-                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                if (this.mapId == this.gw2Mumble.CurrentMap.Id)
                 {
-                    this.effect.View = GameService.Gw2Mumble.PlayerCamera.View;
-                    this.effect.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+                    this.effect.View = this.gw2Mumble.PlayerCamera.View;
+                    this.effect.Projection = this.gw2Mumble.PlayerCamera.Projection;
                 }
             }
         }

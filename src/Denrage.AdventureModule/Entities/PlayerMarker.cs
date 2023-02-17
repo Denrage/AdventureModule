@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -16,7 +17,7 @@ namespace Denrage.AdventureModule.Entities
             new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0), new Vector3(0.5f, 0.5f, 0),
         };
 
-        private static readonly TestEffect sharedEffect;
+        private static TestEffect sharedEffect;
 
         private readonly Texture2D texture;
 
@@ -26,13 +27,17 @@ namespace Denrage.AdventureModule.Entities
 
         static PlayerMarker()
         {
-            sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"));
             CreateSharedVertexBuffer();
         }
 
-        public PlayerMarker()
+        public PlayerMarker(IGw2Mumble gw2Mumble)
         {
             this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
+
+            if (sharedEffect is null)
+            {
+                sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"), gw2Mumble);
+            }
         }
 
         private static void CreateSharedVertexBuffer()

@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Graphics;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -81,7 +82,7 @@ namespace Denrage.AdventureModule.Entities
         private const string PARAMETER_FADECENTER = "FadeCenter";
         private const string PARAMETER_TINTCOLOR = "TintColor";
         private const string PARAMETER_SHOWDEBUGWIREFRAME = "ShowDebugWireframe";
-
+        private readonly IGw2Mumble gw2Mumble;
         private Matrix _world;
         private Texture2D _texture;
         private Texture2D _fadeTexture;
@@ -160,11 +161,20 @@ namespace Denrage.AdventureModule.Entities
 
         #region ctors
 
-        public TestEffect(Effect baseEffect) : base(baseEffect) { }
+        public TestEffect(Effect baseEffect, IGw2Mumble gw2Mumble) : base(baseEffect)
+        {
+            this.gw2Mumble = gw2Mumble;
+        }
 
-        private TestEffect(GraphicsDevice graphicsDevice, byte[] effectCode) : base(graphicsDevice, effectCode) { }
+        private TestEffect(GraphicsDevice graphicsDevice, byte[] effectCode, IGw2Mumble gw2Mumble) : base(graphicsDevice, effectCode)
+        {
+            this.gw2Mumble = gw2Mumble;
+        }
 
-        private TestEffect(GraphicsDevice graphicsDevice, byte[] effectCode, int index, int count) : base(graphicsDevice, effectCode, index, count) { }
+        private TestEffect(GraphicsDevice graphicsDevice, byte[] effectCode, int index, int count, IGw2Mumble gw2Mumble) : base(graphicsDevice, effectCode, index, count)
+        {
+            this.gw2Mumble = gw2Mumble;
+        }
 
         #endregion
 
@@ -182,16 +192,16 @@ namespace Denrage.AdventureModule.Entities
 
         protected override void Update(GameTime gameTime)
         {
-            this.PlayerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
-            this.CameraPosition = GameService.Gw2Mumble.PlayerCamera.Position;
+            this.PlayerPosition = this.gw2Mumble.PlayerCharacter.Position;
+            this.CameraPosition = this.gw2Mumble.PlayerCamera.Position;
 
             // Universal
-            this.Mount = (int)GameService.Gw2Mumble.PlayerCharacter.CurrentMount;
-            this.Race = (int)GameService.Gw2Mumble.PlayerCharacter.Race;
+            this.Mount = (int)this.gw2Mumble.PlayerCharacter.CurrentMount;
+            this.Race = (int)this.gw2Mumble.PlayerCharacter.Race;
 
-            this.View = GameService.Gw2Mumble.PlayerCamera.View;
-            this.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
-            this.PlayerView = GameService.Gw2Mumble.PlayerCamera.PlayerView;
+            this.View = this.gw2Mumble.PlayerCamera.View;
+            this.Projection = this.gw2Mumble.PlayerCamera.Projection;
+            this.PlayerView = this.gw2Mumble.PlayerCamera.PlayerView;
         }
     }
 }

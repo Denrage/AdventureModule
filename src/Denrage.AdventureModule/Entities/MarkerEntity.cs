@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -17,7 +18,7 @@ namespace Denrage.AdventureModule.Entities
             new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0), new Vector3(0.5f, 0.5f, 0),
         };
 
-        private static readonly TestEffect sharedEffect;
+        private static TestEffect sharedEffect;
 
         private readonly AsyncTexture2D texture;
 
@@ -29,13 +30,16 @@ namespace Denrage.AdventureModule.Entities
 
         static MarkerEntity()
         {
-            sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"));
             CreateSharedVertexBuffer();
         }
 
-        public MarkerEntity(AsyncTexture2D texture)
+        public MarkerEntity(AsyncTexture2D texture, IGw2Mumble gw2Mumble)
         {
             this.texture = texture;
+            if (sharedEffect is null)
+            {
+                sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"), gw2Mumble);
+            }
             //this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
         }
 
@@ -126,13 +130,15 @@ namespace Denrage.AdventureModule.Entities
     public class LineEntity : IEntity
     {
         private BasicEffect effect;
+        private readonly IGw2Mumble gw2Mumble;
 
         public float DrawOrder => default;
 
-        public LineEntity()
+        public LineEntity(IGw2Mumble gw2Mumble)
         {
             var context = GameService.Graphics.LendGraphicsDeviceContext();
             this.effect = new BasicEffect(context.GraphicsDevice);
+            this.gw2Mumble = gw2Mumble;
         }
 
         public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
@@ -141,18 +147,18 @@ namespace Denrage.AdventureModule.Entities
             this.effect.CurrentTechnique.Passes[0].Apply();
 
             var lineEnd = new Vector3(
-                GameService.Gw2Mumble.PlayerCharacter.Position.X + GameService.Gw2Mumble.PlayerCamera.Forward.X * 10 + 20,
-                GameService.Gw2Mumble.PlayerCharacter.Position.Y + GameService.Gw2Mumble.PlayerCamera.Forward.Y * 10,
-                GameService.Gw2Mumble.PlayerCharacter.Position.Z + GameService.Gw2Mumble.PlayerCamera.Forward.Z * 10);
+                this.gw2Mumble.PlayerCharacter.Position.X + this.gw2Mumble.PlayerCamera.Forward.X * 10 + 20,
+                this.gw2Mumble.PlayerCharacter.Position.Y + this.gw2Mumble.PlayerCamera.Forward.Y * 10,
+                this.gw2Mumble.PlayerCharacter.Position.Z + this.gw2Mumble.PlayerCamera.Forward.Z * 10);
 
-            var vertices = new[] { new VertexPositionColor(GameService.Gw2Mumble.PlayerCharacter.Position, Color.White), new VertexPositionColor(lineEnd, Color.White) };
+            var vertices = new[] { new VertexPositionColor(this.gw2Mumble.PlayerCharacter.Position, Color.White), new VertexPositionColor(lineEnd, Color.White) };
             graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
         }
 
         public void Update(GameTime gameTime)
         {
-            this.effect.View = GameService.Gw2Mumble.PlayerCamera.View;
-            this.effect.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+            this.effect.View = this.gw2Mumble.PlayerCamera.View;
+            this.effect.Projection = this.gw2Mumble.PlayerCamera.Projection;
         }
     }
 }

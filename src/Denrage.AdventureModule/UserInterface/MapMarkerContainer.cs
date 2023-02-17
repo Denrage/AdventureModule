@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Denrage.AdventureModule.Helper;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,14 +20,16 @@ namespace Denrage.AdventureModule.UserInterface
         private const int MAPOFFSET_MIN = 19;
 
         private readonly DrawObjectService drawObjectService;
+        private readonly IGw2Mumble gw2Mumble;
 
         public Texture2D Texture { get; set; }
 
-        public MapMarkerContainer(DrawObjectService drawObjectService)
+        public MapMarkerContainer(DrawObjectService drawObjectService, IGw2Mumble gw2Mumble)
         {
             this.Texture = Module.Instance.ContentsManager.GetTexture("marker.png");
             this.ClipsBounds = false;
             this.drawObjectService = drawObjectService;
+            this.gw2Mumble = gw2Mumble;
             this.Parent = GameService.Graphics.SpriteScreen;
         }
 
@@ -50,7 +53,7 @@ namespace Denrage.AdventureModule.UserInterface
 
             foreach (var item in markers)
             {
-                var location = MapUtils.ContinentToMapScreen(item.Position.ToVector());
+                var location = MapUtils.ContinentToMapScreen(item.Position.ToVector(), this.gw2Mumble);
                 location = new Vector2(location.X - 20, location.Y - 10);
 
                 if (GameService.Gw2Mumble.UI.IsMapOpen || miniMapRectangle.Contains(location))

@@ -1,4 +1,5 @@
-﻿using Denrage.AdventureModule.Services;
+﻿using Denrage.AdventureModule.Interfaces.Mumble;
+using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Neo.IronLua;
@@ -30,14 +31,14 @@ namespace Denrage.AdventureModule.Adventure
         public void EmoteUsed() 
             => this.characterInformation.FireEmoteUsed();
 
-        public AdventureScript(DialogBuilder dialogBuilder, SynchronizationService synchronizationService)
+        public AdventureScript(DialogBuilder dialogBuilder, SynchronizationService synchronizationService, IGw2Mumble gw2Mumble)
         {
             this.luaEngine = new Lua();
 
             this.logicCreator = new LogicBuilderCreator();
             this.logger = new LuaLogger();
-            this.creator = new AdventureElementCreator(new AdventureDebugService());
-            this.characterInformation = new CharacterInformation();
+            this.creator = new AdventureElementCreator(new AdventureDebugService(), gw2Mumble);
+            this.characterInformation = new CharacterInformation(gw2Mumble);
             var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure2", characterInformation, creator, logger, logicCreator, dialogBuilder, synchronizationService);
             var scriptWindow = new StepOverviewWindow(adventure);
             scriptWindow.Show();

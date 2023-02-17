@@ -2,6 +2,7 @@
 using Blish_HUD.Content;
 using Blish_HUD.Entities;
 using Denrage.AdventureModule.Entities;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -22,6 +23,7 @@ namespace Denrage.AdventureModule.Adventure
         private readonly Vector3 position;
         private readonly int mapId;
         private readonly AdventureDebugService debugService;
+        private readonly IGw2Mumble gw2Mumble;
         private readonly AsyncTexture2D texture;
         private bool interactPressed;
 
@@ -48,9 +50,10 @@ namespace Denrage.AdventureModule.Adventure
             this.texture.SwapTexture(TextureUtil.FromStreamPremultiplied(textureStream));
         }
 
-        public MarkerElement(Vector3 position, Vector3 rotation, int mapId, string textureName, AdventureDebugService debugService, float fadeNear = -1, float fadeFar = -1)
+        public MarkerElement(Vector3 position, Vector3 rotation, int mapId, string textureName, AdventureDebugService debugService, IGw2Mumble gw2Mumble, float fadeNear = -1, float fadeFar = -1)
         {
             this.debugService = debugService;
+            this.gw2Mumble = gw2Mumble;
             this.position = position;
             this.mapId = mapId;
             this.texture = new AsyncTexture2D(ContentService.Textures.TransparentPixel);
@@ -60,13 +63,13 @@ namespace Denrage.AdventureModule.Adventure
                 this.texture.SwapTexture(TextureUtil.FromStreamPremultiplied(textureStream));
             }
 
-            this.marker = new MarkerEntity(this.texture, this.mapId, this.debugService)
+            this.marker = new MarkerEntity(this.texture, this.mapId, this.debugService, this.gw2Mumble)
             {
                 Position = position,
                 Rotation = rotation,
             };
 
-            this.interactCuboid = new InteractCuboidEntity(this.mapId)
+            this.interactCuboid = new InteractCuboidEntity(this.mapId, this.gw2Mumble)
             {
                 Position = position - new Vector3(INTERACT_RADIUS),
                 Dimensions = new Vector3(INTERACT_RADIUS * 2f),
@@ -103,11 +106,11 @@ namespace Denrage.AdventureModule.Adventure
 
         public override void Update(GameTime gameTime)
         {
-            if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+            if (this.mapId == this.gw2Mumble.CurrentMap.Id)
             {
                 if (this.interactPressed)
                 {
-                    if (Vector3.Distance(GameService.Gw2Mumble.PlayerCharacter.Position, this.position) < INTERACT_RADIUS)
+                    if (Vector3.Distance(this.gw2Mumble.PlayerCharacter.Position, this.position) < INTERACT_RADIUS)
                     {
                         this.Interacted?.Invoke();
                     }
@@ -142,6 +145,7 @@ namespace Denrage.AdventureModule.Adventure
 
             private readonly BasicEffect effect;
             private readonly int mapId;
+            private readonly IGw2Mumble gw2Mumble;
 
             public Vector3 Position { get; set; }
 
@@ -149,7 +153,7 @@ namespace Denrage.AdventureModule.Adventure
 
             public float DrawOrder => default;
 
-            public InteractCuboidEntity(int mapId)
+            public InteractCuboidEntity(int mapId, IGw2Mumble gw2Mumble)
             {
                 var context = GameService.Graphics.LendGraphicsDeviceContext();
                 this.effect = new BasicEffect(context.GraphicsDevice)
@@ -158,15 +162,16 @@ namespace Denrage.AdventureModule.Adventure
                 };
                 context.Dispose();
                 this.mapId = mapId;
+                this.gw2Mumble = gw2Mumble;
             }
 
             public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
             {
-                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                if (this.mapId == this.gw2Mumble.CurrentMap.Id)
                 {
                     this.effect.CurrentTechnique.Passes[0].Apply();
                     var vertices = new List<VertexPositionColor>();
-                    var playerPosition = GameService.Gw2Mumble.PlayerCharacter.Position;
+                    var playerPosition = this.gw2Mumble.PlayerCharacter.Position;
                     var color = Color.White;
 
                     var lowerX = Math.Min(this.Position.X, this.Position.X + this.Dimensions.X);
@@ -195,10 +200,10 @@ namespace Denrage.AdventureModule.Adventure
 
             public void Update(GameTime gameTime)
             {
-                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                if (this.mapId == this.gw2Mumble.CurrentMap.Id)
                 {
-                    this.effect.View = GameService.Gw2Mumble.PlayerCamera.View;
-                    this.effect.Projection = GameService.Gw2Mumble.PlayerCamera.Projection;
+                    this.effect.View = this.gw2Mumble.PlayerCamera.View;
+                    this.effect.Projection = this.gw2Mumble.PlayerCamera.Projection;
                 }
             }
         }
@@ -212,11 +217,12 @@ namespace Denrage.AdventureModule.Adventure
                 new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, -0.5f, 0), new Vector3(-0.5f, 0.5f, 0), new Vector3(0.5f, 0.5f, 0),
             };
 
-            private static readonly TestEffect sharedEffect;
+            private static TestEffect sharedEffect;
 
             private readonly AsyncTexture2D texture;
             private readonly int mapId;
             private readonly AdventureDebugService debugService;
+            private readonly IGw2Mumble gw2Mumble;
 
             public float DrawOrder => default;
 
@@ -230,15 +236,19 @@ namespace Denrage.AdventureModule.Adventure
 
             static MarkerEntity()
             {
-                sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"));
                 CreateSharedVertexBuffer();
             }
 
-            public MarkerEntity(AsyncTexture2D texture, int mapId, AdventureDebugService debugService)
+            public MarkerEntity(AsyncTexture2D texture, int mapId, AdventureDebugService debugService, IGw2Mumble gw2Mumble)
             {
                 this.texture = texture;
                 this.mapId = mapId;
                 this.debugService = debugService;
+                this.gw2Mumble = gw2Mumble;
+                if (sharedEffect is null)
+                {
+                    sharedEffect = new TestEffect(Module.Instance.ContentsManager.GetEffect("marker.mgfx"), this.gw2Mumble);
+                }
                 //this.texture = Module.Instance.ContentsManager.GetTexture("marker.png");
             }
 
@@ -263,7 +273,7 @@ namespace Denrage.AdventureModule.Adventure
 
             public void Render(GraphicsDevice graphicsDevice, IWorld world, ICamera camera)
             {
-                if (this.mapId == GameService.Gw2Mumble.CurrentMap.Id)
+                if (this.mapId == this.gw2Mumble.CurrentMap.Id)
                 {
                     const float minSize = 5f;
                     const float maxSize = 2048f;

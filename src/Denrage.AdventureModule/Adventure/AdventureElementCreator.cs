@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Denrage.AdventureModule.Interfaces.Mumble;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,10 +10,12 @@ namespace Denrage.AdventureModule.Adventure
         private readonly Dictionary<Step, Dictionary<string, AdventureElement>> localElements = new Dictionary<Step, Dictionary<string, AdventureElement>>();
         private readonly Dictionary<string, AdventureElement> elements = new Dictionary<string, AdventureElement>();
         private readonly AdventureDebugService debugService;
-        
-        public AdventureElementCreator(AdventureDebugService debugService)
+        private readonly IGw2Mumble gw2Mumble;
+
+        public AdventureElementCreator(AdventureDebugService debugService, IGw2Mumble gw2Mumble)
         {
             this.debugService = debugService;
+            this.gw2Mumble = gw2Mumble;
         }
 
         public IEnumerable<AdventureElement> Elements
@@ -28,7 +31,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public object CreateCuboid(string name, Vector3 position, Vector3 dimension, int mapId, Step step, bool global)
         {
-            var result = new Cuboid(mapId, this.debugService)
+            var result = new Cuboid(mapId, this.debugService, this.gw2Mumble)
             {
                 Position = position,
                 Dimensions = dimension,
@@ -60,7 +63,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public object CreateMarker(string name, string textureName, Vector3 position, Vector3 rotation, int mapId, Step step, bool global, float fadeNear = -1, float fadeFar = -1)
         {
-            var result = new MarkerElement(position, rotation, mapId, textureName, this.debugService, fadeNear, fadeFar);
+            var result = new MarkerElement(position, rotation, mapId, textureName, this.debugService, this.gw2Mumble, fadeNear, fadeFar);
             
             if (global)
             {
