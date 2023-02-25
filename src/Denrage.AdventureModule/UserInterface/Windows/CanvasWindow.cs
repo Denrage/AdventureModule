@@ -26,7 +26,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
         private DrawObjectService drawObjectService;
         private LoginService loginService;
         private Panel blockInputText;
-        private Label blockInputTextLabel;
         private Panel toolControls;
         private Panel canvas;
         private bool? finishedResize;
@@ -40,33 +39,14 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             this.drawObjectService = drawObjectService;
             this.loginService = loginService;
 
-            this.blockInputText = new Panel()
+            this.blockInputText = new DisconnectBlockControl(tcpService)
             {
-                Visible = !tcpService.IsConnected,
                 Parent = this,
-                ZIndex = 6,
             };
 
-            this.blockInputTextLabel = new Label()
-            {
-                Parent = blockInputText,
-                VerticalAlignment = VerticalAlignment.Middle,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Text = "NOT CONNECTED TO THE SERVER!",
-                BackgroundColor = new Color(0,0,0,100),
-            };
+            tcpService.Connected += () => this.blockInput = false;
 
-            tcpService.Connected += () =>
-            {
-                this.blockInput = false;
-                blockInputText.Visible = false;
-            };
-
-            tcpService.Disconnected += () =>
-            {
-                this.blockInput = true;
-                blockInputText.Visible = true;
-            };
+            tcpService.Disconnected += () => this.blockInput = true;
 
             this.tools = new Tool[]
             {
@@ -210,8 +190,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
             this.blockInputText.Width = this.Width;
             this.blockInputText.Height = this.Height;
-            this.blockInputTextLabel.Width = this.Width;
-            this.blockInputTextLabel.Height = this.Height;
         }
 
         private void SetCanvasSize()
@@ -224,17 +202,20 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
         {
-            var lines = this.drawObjectService.GetDrawObjects<Line>().Where(x => this.canvas.ContentRegion.Contains(x.Start.ToVector()) && this.canvas.ContentRegion.Contains(x.End.ToVector())).OrderBy(x => x.TimeStamp);
-            foreach (var line in lines)
+            if (!this.blockInput)
             {
-                var startRectangle = new Rectangle((int)line.Start.X, (int)line.Start.Y, 1, 1);
-                startRectangle = startRectangle.ToBounds(this.canvas.AbsoluteBounds);
-                var endRectangle = new Rectangle((int)line.End.X, (int)line.End.Y, 1, 1);
-                endRectangle = endRectangle.ToBounds(this.canvas.AbsoluteBounds);
-                spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), line.StrokeWidth);
-            }
+                var lines = this.drawObjectService.GetDrawObjects<Line>().Where(x => this.canvas.ContentRegion.Contains(x.Start.ToVector()) && this.canvas.ContentRegion.Contains(x.End.ToVector())).OrderBy(x => x.TimeStamp);
+                foreach (var line in lines)
+                {
+                    var startRectangle = new Rectangle((int)line.Start.X, (int)line.Start.Y, 1, 1);
+                    startRectangle = startRectangle.ToBounds(this.canvas.AbsoluteBounds);
+                    var endRectangle = new Rectangle((int)line.End.X, (int)line.End.Y, 1, 1);
+                    endRectangle = endRectangle.ToBounds(this.canvas.AbsoluteBounds);
+                    spriteBatch.DrawLine(new Microsoft.Xna.Framework.Vector2(startRectangle.X, startRectangle.Y), new Microsoft.Xna.Framework.Vector2(endRectangle.X, endRectangle.Y), new Color(line.LineColor.R, line.LineColor.G, line.LineColor.B, line.LineColor.A), line.StrokeWidth);
+                }
 
-            this.tool.Paint(spriteBatch, bounds, this.canvas.AbsoluteBounds, this.SpriteBatchParameters);
+                this.tool.Paint(spriteBatch, bounds, this.canvas.AbsoluteBounds, this.SpriteBatchParameters);
+            }
 
             base.PaintAfterChildren(spriteBatch, bounds);
         }
