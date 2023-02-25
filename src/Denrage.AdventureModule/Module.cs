@@ -201,18 +201,24 @@ namespace Denrage.AdventureModule
                     }
                 }
             };
-            await this.tcpService.Initialize();
+            //await this.tcpService.Initialize();
 
-            var window = new CanvasWindow()
-            {
-                Parent = GraphicsService.Graphics.SpriteScreen,
-            };
+            //var window = new CanvasWindow()
+            //{
+            //    Parent = GraphicsService.Graphics.SpriteScreen,
+            //};
             //window.Initialize(this.drawObjectService, this.loginService);
             //window.Show();
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService, this.gw2Mumble);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService, this.gw2Mumble);
 
+            var mainWindow = new MainWindow(this.tcpService, this.drawObjectService, this.loginService)
+            {
+                Parent = GraphicsService.Graphics.SpriteScreen,
+            };
+
+            mainWindow.Show();
             //var window2 = new ImageWindow(this.ContentsManager.GetTexture("testimage.jpg"))
             //{
             //    Parent = GraphicsService.Graphics.SpriteScreen,
@@ -231,8 +237,8 @@ namespace Denrage.AdventureModule
 
             //window2.Initialize();
             //window2.Show();
-            var dialog = new DialogBuilder(this.synchronizationService);
-            this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.gw2Mumble);
+            //var dialog = new DialogBuilder(this.synchronizationService);
+            //this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.gw2Mumble);
             //File.WriteAllText("mumble.json", Newtonsoft.Json.JsonConvert.SerializeObject(GameService.Gw2Mumble.RawClient));
         }
 
