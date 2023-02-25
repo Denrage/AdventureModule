@@ -27,7 +27,7 @@ namespace Denrage.AdventureModule.Services
         {
             this.tcpService = tcpService;
             this.gw2Mumble = gw2Mumble;
-            loginService.LoggedIn += () => 
+            loginService.LoggedIn += () =>
                 _ = Task.Run(async () => await this.Run(this.cancellationTokenSource.Token));
         }
 
@@ -39,6 +39,11 @@ namespace Denrage.AdventureModule.Services
                 await Task.Delay(TimeSpan.FromMilliseconds(50), ct);
 
                 if (!this.gw2Mumble.IsAvailable)
+                {
+                    continue;
+                }
+
+                if (!this.tcpService.IsConnected)
                 {
                     continue;
                 }
