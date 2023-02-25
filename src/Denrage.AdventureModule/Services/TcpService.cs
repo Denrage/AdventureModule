@@ -24,6 +24,8 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Disconnected;
 
+        public event Action ConnectionLossed;
+
         public event Action Connected;
 
         public TcpService(Func<DrawObjectService> drawObjectService, Func<SynchronizationService> getSynchronizationService, Func<LoginService> loginService, Func<PlayerMumbleService> playerMumbleService)
@@ -66,6 +68,18 @@ namespace Denrage.AdventureModule.Services
             this.Connected?.Invoke();
         }
 
+        public void Disconnect()
+        {
+            this.cancellationTokenSource.Cancel();
+            
+            if (client != null)
+            {
+                this.client.Disconnect();
+                this.client.DataReceived -= this.Handle;
+                this.client = null;
+            }
+        }
+
         private async void Handle(byte[] data)
         {
             var json = System.Text.Encoding.UTF8.GetString(data);
@@ -105,6 +119,7 @@ namespace Denrage.AdventureModule.Services
                     this.client.Disconnect();
                     this.client.DataReceived -= this.Handle;
                     this.client = null;
+                    this.ConnectionLossed?.Invoke();
                     return;
                 }
             }

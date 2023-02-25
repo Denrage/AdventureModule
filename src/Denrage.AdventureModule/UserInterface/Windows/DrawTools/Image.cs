@@ -255,7 +255,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
 
                 this.previousGameTime = gameTime.TotalGameTime.TotalMilliseconds;
                 watch.Stop();
-                Debug.WriteLine("Time took: " + watch.ElapsedTicks);
+                //Debug.WriteLine("Time took: " + watch.ElapsedTicks);
             }
         }
 

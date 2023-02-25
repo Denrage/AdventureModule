@@ -140,6 +140,11 @@ namespace Denrage.AdventureModule.Services
                 ct.ThrowIfCancellationRequested();
                 await Task.Delay(20, ct);
 
+                if (!this.tcpService.IsConnected)
+                {
+                    continue;
+                }
+
                 if (!this.objectsToUpdate.Any())
                 {
                     continue;

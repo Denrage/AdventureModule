@@ -15,7 +15,7 @@ namespace Denrage.AdventureModule.Services
 
         public event Action LoggedIn;
 
-        public string Name { get; } = Guid.NewGuid().ToString();
+        public string Name { get; } = "TestUser";
 
         public LoginService(TcpService tcpService)
         {

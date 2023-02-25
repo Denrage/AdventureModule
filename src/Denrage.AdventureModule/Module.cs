@@ -9,7 +9,6 @@ using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
-using Denrage.AdventureModule.Mock;
 using Denrage.AdventureModule.Services;
 using Denrage.AdventureModule.UserInterface;
 using Denrage.AdventureModule.UserInterface.Windows;
@@ -185,7 +184,7 @@ namespace Denrage.AdventureModule
         {
             GameService.Graphics.World.AddEntity(new Entities.MarkerEntity(this.ContentsManager.GetTexture("marker.png"), this.gw2Mumble));
             this.tcpService.Connected += () => Logger.Info("Connected");
-            this.tcpService.Disconnected += async () =>
+            this.tcpService.ConnectionLossed += async () =>
             {
                 Logger.Info("Disconnected");
 
@@ -219,6 +218,7 @@ namespace Denrage.AdventureModule
             };
 
             mainWindow.Show();
+
             //var window2 = new ImageWindow(this.ContentsManager.GetTexture("testimage.jpg"))
             //{
             //    Parent = GraphicsService.Graphics.SpriteScreen,

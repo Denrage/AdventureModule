@@ -20,10 +20,13 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 {
     public class CanvasWindow : WindowBase2
     {
+        private bool blockInput;
         private Tool[] tools;
         private bool leftMouseDown = false;
         private DrawObjectService drawObjectService;
         private LoginService loginService;
+        private Panel blockInputText;
+        private Label blockInputTextLabel;
         private Panel toolControls;
         private Panel canvas;
         private bool? finishedResize;
@@ -32,10 +35,38 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         private Texture2D clipboardTexture;
 
-        public void Initialize(DrawObjectService drawObjectService, LoginService loginService)
+        public void Initialize(DrawObjectService drawObjectService, LoginService loginService, TcpService tcpService)
         {
             this.drawObjectService = drawObjectService;
             this.loginService = loginService;
+
+            this.blockInputText = new Panel()
+            {
+                Visible = !tcpService.IsConnected,
+                Parent = this,
+                ZIndex = 6,
+            };
+
+            this.blockInputTextLabel = new Label()
+            {
+                Parent = blockInputText,
+                VerticalAlignment = VerticalAlignment.Middle,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Text = "NOT CONNECTED TO THE SERVER!",
+                BackgroundColor = new Color(0,0,0,100),
+            };
+
+            tcpService.Connected += () =>
+            {
+                this.blockInput = false;
+                blockInputText.Visible = false;
+            };
+
+            tcpService.Disconnected += () =>
+            {
+                this.blockInput = true;
+                blockInputText.Visible = true;
+            };
 
             this.tools = new Tool[]
             {
@@ -122,46 +153,47 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             };
         }
 
-        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Rectangle bounds) => base.PaintBeforeChildren(spriteBatch, bounds);
-
         public override void UpdateContainer(GameTime gameTime)
         {
-            if (!this.finishedResize.HasValue && this.Resizing)
+            if (!this.blockInput)
             {
-                this.finishedResize = false;
-            }
-
-            if (this.finishedResize.HasValue && !this.finishedResize.Value && !this.Resizing)
-            {
-                this.finishedResize = true;
-            }
-
-            if (this.finishedResize.HasValue && this.finishedResize.Value)
-            {
-                this.finishedResize = null;
-                System.Diagnostics.Debug.WriteLine("Resizing finished");
-            }
-
-            if (this.tool != null && !this.Dragging && !this.Resizing)
-            {
-                var drawContext = new DrawContext()
+                if (!this.finishedResize.HasValue && this.Resizing)
                 {
-                    Canvas = this.canvas,
-                    LeftMouseDown = this.leftMouseDown,
-                    Mouse = GameService.Input.Mouse.Position,
-                };
+                    this.finishedResize = false;
+                }
 
-                this.tool.OnUpdateActive(drawContext);
-
-                foreach (var item in this.tools)
+                if (this.finishedResize.HasValue && !this.finishedResize.Value && !this.Resizing)
                 {
-                    item.OnUpdateAlways(drawContext, gameTime);
+                    this.finishedResize = true;
+                }
+
+                if (this.finishedResize.HasValue && this.finishedResize.Value)
+                {
+                    this.finishedResize = null;
+                    System.Diagnostics.Debug.WriteLine("Resizing finished");
+                }
+
+                if (this.tool != null && !this.Dragging && !this.Resizing)
+                {
+                    var drawContext = new DrawContext()
+                    {
+                        Canvas = this.canvas,
+                        LeftMouseDown = this.leftMouseDown,
+                        Mouse = GameService.Input.Mouse.Position,
+                    };
+
+                    this.tool.OnUpdateActive(drawContext);
+
+                    foreach (var item in this.tools)
+                    {
+                        item.OnUpdateAlways(drawContext, gameTime);
+                    }
                 }
             }
 
             base.UpdateContainer(gameTime);
         }
-        
+
         protected override void OnResized(ResizedEventArgs e)
         {
             base.OnResized(e);
@@ -175,6 +207,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 this.SetCanvasSize();
             }
+
+            this.blockInputText.Width = this.Width;
+            this.blockInputText.Height = this.Height;
+            this.blockInputTextLabel.Width = this.Width;
+            this.blockInputTextLabel.Height = this.Height;
         }
 
         private void SetCanvasSize()
