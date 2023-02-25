@@ -29,6 +29,28 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 HeightSizingMode = SizingMode.Fill,
             };
 
+            var usernamePanel = new FlowPanel()
+            {
+                Parent = panel,
+                FlowDirection = ControlFlowDirection.LeftToRight,
+                WidthSizingMode = SizingMode.Fill,
+                HeightSizingMode = SizingMode.AutoSize,
+            };
+
+            _ = new Label()
+            {
+                Parent = usernamePanel,
+                Text = "Username: ",
+                AutoSizeWidth = true,
+            };
+
+            var usernameTextbox = new TextBox()
+            {
+                Parent = usernamePanel,
+            };
+
+            usernameTextbox.TextChanged += (s, e) => loginService.Name = usernameTextbox.Text;
+
             var connectButton = new StandardButton()
             {
                 Parent = panel,
