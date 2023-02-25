@@ -1,4 +1,4 @@
-﻿namespace Denrage.AdventureModule.Adventure
+﻿namespace Denrage.AdventureModule.Adventure.Services
 {
     public class LuaLogger
     {

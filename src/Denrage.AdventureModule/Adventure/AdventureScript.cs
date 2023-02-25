@@ -1,4 +1,6 @@
-﻿using Denrage.AdventureModule.Interfaces.Mumble;
+﻿using Denrage.AdventureModule.Adventure.Elements;
+using Denrage.AdventureModule.Adventure.Services;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -1,8 +1,9 @@
-﻿using Denrage.AdventureModule.Libs.Messages.Data;
+﻿using Denrage.AdventureModule.Adventure.Services;
+using Denrage.AdventureModule.Libs.Messages.Data;
 using System;
 using System.Collections.Concurrent;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class DialogBuilder
     {

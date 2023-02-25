@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Services
 {
     public class AdventureElementCreatorWrapper
     {

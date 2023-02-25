@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Services
 {
     public class AdventureDebugService
     {

@@ -2,7 +2,7 @@
 using Blish_HUD.Controls;
 using Microsoft.Xna.Framework;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Windows
 {
     public class StepOverviewWindow : WindowBase2
     {

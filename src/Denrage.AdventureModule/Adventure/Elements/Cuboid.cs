@@ -1,6 +1,8 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Adventure.Interfaces;
+using Denrage.AdventureModule.Adventure.Services;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class Cuboid : AdventureElement, ICuboidLua
     {
@@ -177,7 +179,7 @@ namespace Denrage.AdventureModule.Adventure
                     foreach (var item in this.edges)
                     {
                         vertices.Add(new VertexPositionColor(this.Position + new Vector3(this.Dimensions.X * item.Start.X, this.Dimensions.Y * item.Start.Y, this.Dimensions.Z * item.Start.Z), color));
-                        vertices.Add(new VertexPositionColor(this.Position + (this.Dimensions * item.End), color));
+                        vertices.Add(new VertexPositionColor(this.Position + this.Dimensions * item.End, color));
                     }
 
                     graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices.ToArray(), 0, this.edges.Count());

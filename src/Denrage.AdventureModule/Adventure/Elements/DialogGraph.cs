@@ -1,9 +1,10 @@
-﻿using Neo.IronLua;
+﻿using Denrage.AdventureModule.Adventure.Services;
+using Neo.IronLua;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class DialogGraph
     {

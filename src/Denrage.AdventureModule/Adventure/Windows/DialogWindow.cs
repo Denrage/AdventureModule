@@ -1,7 +1,8 @@
 ﻿using Blish_HUD.Controls;
+using Denrage.AdventureModule.Adventure.Services;
 using Microsoft.Xna.Framework;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Windows
 {
     public class DialogWindow : WindowBase2
     {

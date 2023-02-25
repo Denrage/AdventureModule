@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Neo.IronLua;
 using System;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class CharacterInformation : ICharacterLua
     {

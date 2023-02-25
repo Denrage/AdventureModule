@@ -1,8 +1,9 @@
 ﻿using Blish_HUD;
+using Denrage.AdventureModule.Adventure.Elements;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using System;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Services
 {
     public class AdventureDialog
     {

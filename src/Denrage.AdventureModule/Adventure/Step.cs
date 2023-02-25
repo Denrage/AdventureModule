@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Denrage.AdventureModule.Adventure.Elements;
+using Denrage.AdventureModule.Adventure.Services;
+using Microsoft.Xna.Framework;
 using Neo.IronLua;
 using System;
 using System.Collections.Generic;

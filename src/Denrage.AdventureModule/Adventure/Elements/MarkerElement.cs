@@ -1,6 +1,8 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Entities;
+using Denrage.AdventureModule.Adventure.Interfaces;
+using Denrage.AdventureModule.Adventure.Services;
 using Denrage.AdventureModule.Entities;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
@@ -11,7 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class MarkerElement : AdventureElement, IMarkerLua
     {
@@ -191,7 +193,7 @@ namespace Denrage.AdventureModule.Adventure
                     foreach (var item in this.edges)
                     {
                         vertices.Add(new VertexPositionColor(this.Position + new Vector3(this.Dimensions.X * item.Start.X, this.Dimensions.Y * item.Start.Y, this.Dimensions.Z * item.Start.Z), color));
-                        vertices.Add(new VertexPositionColor(this.Position + (this.Dimensions * item.End), color));
+                        vertices.Add(new VertexPositionColor(this.Position + this.Dimensions * item.End, color));
                     }
 
                     graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices.ToArray(), 0, this.edges.Count());
@@ -297,7 +299,7 @@ namespace Denrage.AdventureModule.Adventure
                         var transformMatrix = Matrix.Multiply(Matrix.Multiply(matrix, sharedEffect.View),
                                                               sharedEffect.Projection);
 
-                        for (int i = 0; i < _faceVerts.Length; i++)
+                        for (var i = 0; i < _faceVerts.Length; i++)
                         {
                             _screenVerts[i] = Vector4.Transform(_faceVerts[i], transformMatrix);
                             _screenVerts[i] /= _screenVerts[i].W;
@@ -306,8 +308,8 @@ namespace Denrage.AdventureModule.Adventure
                         // Very alloc heavy
                         var bounds = BoundingRectangle.CreateFrom(_screenVerts.Select(s => new Point2(s.X, s.Y)).ToArray());
 
-                        float pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
-                        float limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
+                        var pixelSizeY = bounds.HalfExtents.Y * 2 * sharedEffect.GraphicsDevice.Viewport.Height;
+                        var limitY = MathHelper.Clamp(pixelSizeY, minSize * 4, maxSize * 4);
 
                         // Eww
                         matrix *= Matrix.CreateTranslation(-this.Position)

@@ -2,7 +2,7 @@
 using Neo.IronLua;
 using System;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Interfaces
 {
     public interface ICharacterLua
     {

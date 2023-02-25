@@ -1,10 +1,11 @@
-﻿using Neo.IronLua;
+﻿using Denrage.AdventureModule.Adventure.Interfaces;
+using Neo.IronLua;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Elements
 {
     public class ButtonOrderBuilder : IButtonOrderBuilderLua
     {
@@ -76,7 +77,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public void Build()
         {
-            for (int i = 0; i < this.buttonStates.Count - 1; i++)
+            for (var i = 0; i < this.buttonStates.Count - 1; i++)
             {
                 this.buttonStates[i].NextState = this.buttonStates[i + 1];
             }

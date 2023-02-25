@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Denrage.AdventureModule.Adventure
+namespace Denrage.AdventureModule.Adventure.Services
 {
     public class AdventureElementCreator
     {
@@ -64,7 +64,7 @@ namespace Denrage.AdventureModule.Adventure
         public object CreateMarker(string name, string textureName, Vector3 position, Vector3 rotation, int mapId, Step step, bool global, float fadeNear = -1, float fadeFar = -1)
         {
             var result = new MarkerElement(position, rotation, mapId, textureName, this.debugService, this.gw2Mumble, fadeNear, fadeFar);
-            
+
             if (global)
             {
                 lock (this.elements)
@@ -118,7 +118,7 @@ namespace Denrage.AdventureModule.Adventure
                 }
             }
 
-            lock(this.localElements)
+            lock (this.localElements)
             {
                 foreach (var item in this.localElements)
                 {
