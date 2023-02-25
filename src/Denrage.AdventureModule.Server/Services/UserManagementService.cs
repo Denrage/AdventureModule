@@ -45,6 +45,9 @@ public class UserManagementService
         }
     }
 
+    public bool UserExists(string name)
+        => this.users.Any(x => x.Value.Name == name);
+
     public Group? GetGroup(User user) 
         => this.groups.FirstOrDefault(x => x.Users.Contains(user));
 

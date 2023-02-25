@@ -24,11 +24,21 @@ internal class LoginMessageHandler : MessageHandler<LoginMessage>
         var user = this.userManagementService.GetUserFromConnectionId(clientId);
         if (user != null)
         {
+            Console.WriteLine($"User '{user.Name}' changed name to '{message.Name}'");
             this.userManagementService.UpdateUserId(clientId, message.Name);
         }
         else
         {
-            this.userManagementService.AddUser(clientId, message.Name);
+            if (this.userManagementService.UserExists(message.Name))
+            {
+                this.userManagementService.UpdateUserId(clientId, message.Name);
+                Console.WriteLine($"User '{message.Name}' logged back in");
+            }
+            else
+            {
+                this.userManagementService.AddUser(clientId, message.Name);
+                Console.WriteLine($"New User '{message.Name}' logged in");
+            }
         }
 
         await this.tcpService.SendMessage(clientId, new LoginResponseMessage() { Id = message.Id, Success = true }, ct);
