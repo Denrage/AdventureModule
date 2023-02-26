@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Denrage.AdventureModule.Adventure.Elements;
+using Denrage.AdventureModule.Adventure.Windows;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using System;
 

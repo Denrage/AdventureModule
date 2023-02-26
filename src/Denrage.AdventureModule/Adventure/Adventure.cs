@@ -1,4 +1,7 @@
-﻿using Denrage.AdventureModule.Libs.Messages.Data;
+﻿using Denrage.AdventureModule.Adventure.Elements;
+using Denrage.AdventureModule.Adventure.Services;
+using Denrage.AdventureModule.Libs.Messages.Data;
+using Denrage.AdventureModule.Services;
 using Neo.IronLua;
 using System;
 using System.Collections.Generic;
@@ -32,7 +35,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public IReadOnlyDictionary<string, Step> Steps => new ReadOnlyDictionary<string, Step>(this.steps);
 
-        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator creator, LuaLogger logger, LogicBuilderCreator logicCreator, DialogBuilder dialog, SynchronizationService synchronizationService)
+        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator creator, LuaLogger logger, LogicBuilderCreator logicCreator, DialogBuilder dialog, SynchronizationService synchronizationService, TcpService tcpService)
         {
             this.synchronizationService = synchronizationService;
             this.adventureElementCreator = creator;
@@ -62,7 +65,15 @@ namespace Denrage.AdventureModule.Adventure
                 }
             });
 
-            //this.synchronizationService.PropertyChanged += (stepName, property, value) => this.steps[stepName].Environment.SetServerVariable(property, value);
+            tcpService.Disconnected += () =>
+            {
+                var previousStep = this.Steps.Values.FirstOrDefault(x => x.State == StepState.Running);
+                if (previousStep != null)
+                {
+                    this.DeactivateStep(previousStep);
+                }
+            };
+
             this.LoadSteps(scriptFolder);
         }
 

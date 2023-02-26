@@ -68,6 +68,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Denrage.AdventureModule.Libs\Denrage.AdventureModule.Libs.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Adventure\Models\" />
+	</ItemGroup>
 	<PropertyGroup />
 	<PropertyGroup>
 		<AssemblyName>$(MSBuildProjectName)</AssemblyName>

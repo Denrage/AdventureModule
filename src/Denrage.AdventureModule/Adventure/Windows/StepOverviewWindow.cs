@@ -1,5 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Denrage.AdventureModule.Services;
+using Denrage.AdventureModule.UserInterface;
 using Microsoft.Xna.Framework;
 
 namespace Denrage.AdventureModule.Adventure.Windows
@@ -7,13 +9,15 @@ namespace Denrage.AdventureModule.Adventure.Windows
     public class StepOverviewWindow : WindowBase2
     {
         private readonly Adventure adventure;
+        private readonly TcpService tcpService;
         private FlowPanel panel;
 
-        public StepOverviewWindow(Adventure adventure)
+        public StepOverviewWindow(Adventure adventure, TcpService tcpService)
         {
             this.ConstructWindow(Module.Instance.ContentsManager.GetTexture("background.png"), new Rectangle(0, 0, 350, 600), new Rectangle(0, 0, 350, 600));
             this.Parent = GameService.Graphics.SpriteScreen;
             this.adventure = adventure;
+            this.tcpService = tcpService;
             this.adventure.StepsChanged += () => this.RefreshStepList();
             this.adventure.MovedToStep += (_, step) => this.RefreshStepList();
             this.BuildWindow();
@@ -69,6 +73,11 @@ namespace Denrage.AdventureModule.Adventure.Windows
 
         private void BuildWindow()
         {
+            _ = new DisconnectBlockControl(this.tcpService)
+            {
+                Parent = this,
+            };
+
             this.panel = new FlowPanel()
             {
                 FlowDirection = ControlFlowDirection.SingleTopToBottom,

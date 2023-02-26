@@ -1,4 +1,5 @@
-﻿using Denrage.AdventureModule.Interfaces.Mumble;
+﻿using Denrage.AdventureModule.Adventure.Elements;
+using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;

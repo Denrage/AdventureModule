@@ -1,4 +1,5 @@
 ﻿using Blish_HUD;
+using Denrage.AdventureModule.Adventure.Interfaces;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Microsoft.Xna.Framework;
 using Neo.IronLua;
