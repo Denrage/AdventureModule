@@ -17,8 +17,10 @@ namespace Denrage.AdventureModule.Adventure.Elements
             this.synchronizationService.Register(typeof(DialogState), state =>
             {
                 var dialogState = (DialogState)state;
-                _ = this.dialogs.TryGetValue(dialogState.Id, out var adventureDialog);
-                adventureDialog.SetState(dialogState);
+                if (this.dialogs.TryGetValue(dialogState.Id, out var adventureDialog))
+                {
+                    adventureDialog.SetState(dialogState);
+                }
             });
         }
 

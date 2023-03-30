@@ -14,25 +14,25 @@ public class SynchronizationService
     {
         this.tcpService = tcpService;
         this.userManagementService = userManagementService;
-        userManagementService.LoggedIn += id =>
+    }
+
+    public async Task GetStates(Guid clientId, CancellationToken ct)
+    {
+        foreach (var item in this.currentStates)
         {
-            var user = userManagementService.GetUserFromConnectionId(id);
-            foreach (var item in this.currentStates)
+            if (item.Value is DialogState dialogState)
             {
-                if (item.Value is DialogState dialogState)
-                {
-                    _ = this.tcpService.SendMessage(id, new StateChangedMessage<DialogState>() { State = dialogState }, default);
-                }
-                else if (item.Value is AdventureState adventureState)
-                {
-                    _ = this.tcpService.SendMessage(id, new StateChangedMessage<AdventureState>() { State = adventureState }, default);
-                }
-                else if (item.Value is LuaVariablesState variablesState)
-                {
-                    _ = this.tcpService.SendMessage(id, new StateChangedMessage<LuaVariablesState>() { State = variablesState }, default);
-                }
+                await this.tcpService.SendMessage(clientId, new StateChangedMessage<DialogState>() { State = dialogState }, default);
             }
-        };
+            else if (item.Value is AdventureState adventureState)
+            {
+                await this.tcpService.SendMessage(clientId, new StateChangedMessage<AdventureState>() { State = adventureState }, default);
+            }
+            else if (item.Value is LuaVariablesState variablesState)
+            {
+                await this.tcpService.SendMessage(clientId, new StateChangedMessage<LuaVariablesState>() { State = variablesState }, default);
+            }
+        }
     }
 
     public async Task StateChanged(IState state, Guid clientId, CancellationToken ct)

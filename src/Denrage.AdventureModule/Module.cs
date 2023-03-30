@@ -5,6 +5,7 @@ using Blish_HUD.Modules;
 using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
 using Denrage.AdventureModule.Adventure;
+using Denrage.AdventureModule.Adventure.Elements;
 using Denrage.AdventureModule.Helper;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Libs.Messages;
@@ -211,8 +212,10 @@ namespace Denrage.AdventureModule
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService, this.gw2Mumble);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService, this.gw2Mumble);
+            var dialog = new DialogBuilder(this.synchronizationService);
+            this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.tcpService, this.gw2Mumble);
 
-            var mainWindow = new MainWindow(this.tcpService, this.drawObjectService, this.loginService)
+            var mainWindow = new MainWindow(this.tcpService, this.drawObjectService, this.loginService, this.adventureScript)
             {
                 Parent = GraphicsService.Graphics.SpriteScreen,
             };
@@ -237,8 +240,7 @@ namespace Denrage.AdventureModule
 
             //window2.Initialize();
             //window2.Show();
-            //var dialog = new DialogBuilder(this.synchronizationService);
-            //this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.gw2Mumble);
+
             //File.WriteAllText("mumble.json", Newtonsoft.Json.JsonConvert.SerializeObject(GameService.Gw2Mumble.RawClient));
         }
 

@@ -1,5 +1,6 @@
 ﻿using Denrage.AdventureModule.Adventure.Elements;
 using Denrage.AdventureModule.Adventure.Services;
+using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
 using Neo.IronLua;
@@ -75,6 +76,14 @@ namespace Denrage.AdventureModule.Adventure
             };
 
             this.LoadSteps(scriptFolder);
+
+            if (tcpService.IsConnected)
+            {
+                tcpService.Send(new GetStatesMessage(), default);
+            }
+
+            tcpService.Connected += () =>
+                tcpService.Send(new GetStatesMessage(), default);
         }
 
         private void LoadSteps(string scriptFolder)

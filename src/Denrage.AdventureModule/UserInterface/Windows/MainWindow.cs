@@ -1,5 +1,6 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
+using Denrage.AdventureModule.Adventure;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using System;
@@ -14,7 +15,7 @@ namespace Denrage.AdventureModule.UserInterface.Windows
     {
         private readonly TcpService tcpService;
 
-        public MainWindow(TcpService tcpService, DrawObjectService drawObjectService, LoginService loginService)
+        public MainWindow(TcpService tcpService, DrawObjectService drawObjectService, LoginService loginService, AdventureScript adventureScript)
         {
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));
             this.Location = new Point(0, 100);
@@ -77,6 +78,12 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 Text = "Canvas",
             };
 
+            var adventureButton = new StandardButton()
+            {
+                Parent = panel,
+                Text = "Adventure",
+            };
+
             this.tcpService.Connected += () =>
             {
                 isConnectedLabel.Text = "Connected";
@@ -105,6 +112,9 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
             canvasWindowButton.Click += (s, e)
                 => canvasWindow.Show();
+
+            adventureButton.Click += (s, e)
+                => adventureScript.Initialize();
         }
     }
 }

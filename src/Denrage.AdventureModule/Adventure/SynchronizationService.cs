@@ -28,8 +28,10 @@ namespace Denrage.AdventureModule.Adventure
 
         public Task StateChanged(IState state, CancellationToken ct)
         {
-            this.stateHandlers.TryGetValue(state.GetType(), out var handler);
-            handler(state);
+            if (this.stateHandlers.TryGetValue(state.GetType(), out var handler))
+            {
+                handler(state);
+            }
 
             return Task.CompletedTask;
         }

@@ -37,6 +37,7 @@ public class TcpService : IDisposable
             { typeof(StateChangedMessage<Libs.Messages.Data.DialogState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.DialogState>), new StateChangedMessageHandler<Libs.Messages.Data.DialogState>(getSynchronizationService)) },
             { typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>), new StateChangedMessageHandler<Libs.Messages.Data.LuaVariablesState>(getSynchronizationService)) },
             { typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>), new StateChangedMessageHandler<Libs.Messages.Data.AdventureState>(getSynchronizationService)) },
+            { typeof(GetStatesMessage).FullName, (typeof(GetStatesMessage), new GetStatesMessageHandler(getSynchronizationService)) },
         };
         this.userManagementService = userManagementService;
     }

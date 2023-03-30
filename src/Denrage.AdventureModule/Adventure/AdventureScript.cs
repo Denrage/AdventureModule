@@ -19,6 +19,9 @@ namespace Denrage.AdventureModule.Adventure
         private readonly LogicBuilderCreator logicCreator;
         private readonly LuaLogger logger;
         private readonly Lua luaEngine;
+        private readonly DialogBuilder dialogBuilder;
+        private readonly SynchronizationService synchronizationService;
+        private readonly TcpService tcpService;
 
         public Dictionary<string, Step> Steps { get; } = new Dictionary<string, Step>();
 
@@ -42,8 +45,15 @@ namespace Denrage.AdventureModule.Adventure
             this.logger = new LuaLogger();
             this.creator = new AdventureElementCreator(new AdventureDebugService(), gw2Mumble);
             this.characterInformation = new CharacterInformation(gw2Mumble);
-            var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure2", characterInformation, creator, logger, logicCreator, dialogBuilder, synchronizationService, tcpService);
-            var scriptWindow = new StepOverviewWindow(adventure, tcpService);
+            this.dialogBuilder = dialogBuilder;
+            this.synchronizationService = synchronizationService;
+            this.tcpService = tcpService;
+        }
+
+        public void Initialize()
+        {
+            var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure2", this.characterInformation, this.creator, this.logger, this.logicCreator, this.dialogBuilder, this.synchronizationService, this.tcpService);
+            var scriptWindow = new StepOverviewWindow(adventure, this.tcpService);
             scriptWindow.Show();
         }
     }
