@@ -8,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.Server.MessageHandlers;
-internal class LoginMessageHandler : MessageHandler<LoginMessage>
+public class LoginMessageHandler : MessageHandler<LoginMessage>
 {
-    private readonly UserManagementService userManagementService;
-    private readonly TcpService tcpService;
+    private readonly IUserManagementService userManagementService;
+    private readonly ITcpService tcpService;
 
-    public LoginMessageHandler(UserManagementService userManagementService, TcpService tcpService)
+    public LoginMessageHandler(IUserManagementService userManagementService, ITcpService tcpService)
     {
         this.userManagementService = userManagementService;
         this.tcpService = tcpService;

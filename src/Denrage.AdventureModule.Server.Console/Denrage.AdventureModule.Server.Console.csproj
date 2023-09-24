@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="7.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Denrage.AdventureModule.Server\Denrage.AdventureModule.Server.csproj" />
   </ItemGroup>
 

@@ -4,13 +4,13 @@ using System.Collections.Concurrent;
 
 namespace Denrage.AdventureModule.Server.Services;
 
-public class SynchronizationService
+public class SynchronizationService : ISynchronizationService
 {
-    private readonly TcpService tcpService;
-    private readonly UserManagementService userManagementService;
+    private readonly ITcpService tcpService;
+    private readonly IUserManagementService userManagementService;
     private readonly ConcurrentDictionary<Guid, IState> currentStates = new ConcurrentDictionary<Guid, IState>();
 
-    public SynchronizationService(TcpService tcpService, UserManagementService userManagementService)
+    public SynchronizationService(ITcpService tcpService, IUserManagementService userManagementService)
     {
         this.tcpService = tcpService;
         this.userManagementService = userManagementService;

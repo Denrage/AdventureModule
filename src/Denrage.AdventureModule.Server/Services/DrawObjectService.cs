@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Denrage.AdventureModule.Server.Services;
 
-public class DrawObjectService
+public class DrawObjectService : IDrawObjectService
 {
     private ConcurrentDictionary<Type, ConcurrentDictionary<Guid, DrawObject>> drawObjects = new();
     private Dictionary<Type, (
@@ -13,9 +13,9 @@ public class DrawObjectService
         Func<IEnumerable<object>, Message> UpdateMessage,
         Action<object, object> UpdateObject)> drawObjectTypeToMessageType = new();
 
-    private readonly TcpService tcpService;
+    private readonly ITcpService tcpService;
 
-    public DrawObjectService(TcpService tcpService, UserManagementService userManagementService)
+    public DrawObjectService(ITcpService tcpService, IUserManagementService userManagementService)
     {
         this.tcpService = tcpService;
         userManagementService.LoggedIn += id =>
@@ -34,7 +34,7 @@ public class DrawObjectService
         Func<IEnumerable<T>, TAddMessage> addMessage,
         Func<IEnumerable<Guid>, TRemoveMessage> removeMessage,
         Func<IEnumerable<T>, TUpdateMessage> updateMessage,
-        Action<T, T> updateObject)
+        Action<T, T>? updateObject)
         where T : DrawObject
         where TAddMessage : AddDrawObjectMessage<T>
         where TRemoveMessage : RemoveDrawObjectMessage<T>
@@ -45,7 +45,7 @@ public class DrawObjectService
             (items => addMessage(items.Cast<T>()),
             ids => removeMessage(ids),
             items => updateMessage(items.Cast<T>()),
-            (oldObject, newObject) => updateObject((T)oldObject, (T)newObject)));
+            (oldObject, newObject) => updateObject?.Invoke((T)oldObject, (T)newObject)));
     }
 
     public async Task Add<T>(IEnumerable<T> drawObjects, Guid clientId, CancellationToken ct)
@@ -62,6 +62,8 @@ public class DrawObjectService
             {
                 objects.TryAdd(item.Id, item);
             }
+
+            Console.WriteLine("Drawn object");
 
             await this.tcpService.SendToGroup(
                 clientId,

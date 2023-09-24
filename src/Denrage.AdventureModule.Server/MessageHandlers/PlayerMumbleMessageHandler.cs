@@ -1,4 +1,5 @@
 ﻿using Denrage.AdventureModule.Libs.Messages;
+using Denrage.AdventureModule.Libs.Messages.Handler;
 using Denrage.AdventureModule.Server.Services;
 using System;
 using System.Collections.Generic;
@@ -7,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.Server.MessageHandlers;
-public class PlayerMumbleMessageHandler : Libs.Messages.Handler.MessageHandler<Libs.Messages.PlayerMumbleMessage>
+public class PlayerMumbleMessageHandler : MessageHandler<PlayerMumbleMessage>
 {
-    private readonly Func<PlayerMumbleService> playerMumbleService;
-    private readonly UserManagementService userManagementService;
+    private readonly IPlayerMumbleService playerMumbleService;
+    private readonly IUserManagementService userManagementService;
 
-    public PlayerMumbleMessageHandler(Func<PlayerMumbleService> playerMumbleService, UserManagementService userManagementService)
+    public PlayerMumbleMessageHandler(IPlayerMumbleService playerMumbleService, IUserManagementService userManagementService)
     {
         this.playerMumbleService = playerMumbleService;
         this.userManagementService = userManagementService;
@@ -20,15 +21,15 @@ public class PlayerMumbleMessageHandler : Libs.Messages.Handler.MessageHandler<L
 
     protected override Task Handle(Guid clientId, PlayerMumbleMessage message, CancellationToken ct)
     {
-        var mumbleService = this.playerMumbleService();
         if (message == null)
         {
             return Task.CompletedTask;
         }
+     
         var user = this.userManagementService.GetUserFromConnectionId(clientId);
         if (user != null)
         {
-            mumbleService.UpdateInformation(user.Name, message.Information);
+            this.playerMumbleService.UpdateInformation(user.Name, message.Information);
         }
         return Task.CompletedTask;
     }

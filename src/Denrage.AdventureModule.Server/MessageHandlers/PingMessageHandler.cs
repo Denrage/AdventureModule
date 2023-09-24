@@ -6,9 +6,9 @@ namespace Denrage.AdventureModule.Server.MessageHandlers;
 
 public class PingMessageHandler : MessageHandler<PingMessage>
 {
-    private readonly TcpService tcpService;
+    private readonly ITcpService tcpService;
 
-    public PingMessageHandler(TcpService tcpService)
+    public PingMessageHandler(ITcpService tcpService)
     {
         this.tcpService = tcpService;
     }

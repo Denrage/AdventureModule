@@ -8,15 +8,15 @@ namespace Denrage.AdventureModule.Server.MessageHandlers;
 public class RemoveDrawObjectMessageHandler<TDrawObject> : MessageHandler<RemoveDrawObjectMessage<TDrawObject>>
     where TDrawObject : DrawObject
 {
-    private readonly Func<DrawObjectService> getDrawObjectService;
+    private readonly IDrawObjectService drawObjectService;
 
-    public RemoveDrawObjectMessageHandler(Func<DrawObjectService> getDrawObjectService)
+    public RemoveDrawObjectMessageHandler(IDrawObjectService drawObjectService)
     {
-        this.getDrawObjectService = getDrawObjectService;
+        this.drawObjectService = drawObjectService;
     }
 
     protected override async Task Handle(Guid clientId, RemoveDrawObjectMessage<TDrawObject> message, CancellationToken ct)
     {
-        await this.getDrawObjectService().Remove<TDrawObject>(message.Ids, clientId, ct);
+        await this.drawObjectService.Remove<TDrawObject>(message.Ids, clientId, ct);
     }
 }

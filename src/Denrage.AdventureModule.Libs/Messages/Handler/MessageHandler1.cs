@@ -8,6 +8,8 @@ namespace Denrage.AdventureModule.Libs.Messages.Handler
     public abstract class MessageHandler<T> : MessageHandler
         where T : Message
     {
+        public override Type MessageType { get; } = typeof(T);
+
         public override async Task Handle(Guid clientId, object message, CancellationToken ct)
             => await this.Handle(clientId, (T)message, ct);
 

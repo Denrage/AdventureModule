@@ -3,13 +3,13 @@ using Denrage.AdventureModule.Libs.Messages.Data;
 
 namespace Denrage.AdventureModule.Server.Services;
 
-public class PlayerMumbleService
+public class PlayerMumbleService : IPlayerMumbleService
 {
     private System.Collections.Concurrent.ConcurrentDictionary<string, MumbleInformation> playerInformation = new System.Collections.Concurrent.ConcurrentDictionary<string, MumbleInformation>();
-    private readonly TcpService tcpService;
-    private readonly UserManagementService userManagementService;
+    private readonly ITcpService tcpService;
+    private readonly IUserManagementService userManagementService;
 
-    public PlayerMumbleService(TcpService tcpService, UserManagementService userManagementService)
+    public PlayerMumbleService(ITcpService tcpService, IUserManagementService userManagementService)
     {
         this.tcpService = tcpService;
         this.userManagementService = userManagementService;

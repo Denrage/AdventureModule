@@ -4,48 +4,36 @@ using Denrage.AdventureModule.Server.MessageHandlers;
 
 namespace Denrage.AdventureModule.Server.Services;
 
-public class TcpService : IDisposable
+public class TcpService : ITcpService, IDisposable
 {
     private readonly TcpServer server;
-    private readonly Dictionary<string, (Type Type, MessageHandler Handler)> messageTypes;
+    private readonly Dictionary<string, (Type Type, IMessageHandler Handler)> messageTypes;
     private readonly CancellationTokenSource cancellationTokenSource;
-    private readonly UserManagementService userManagementService;
+    private readonly IUserManagementService userManagementService;
 
     public List<Guid> Clients => this.server.Clients;
 
-    public event Action<Guid> ClientConnected;
+    public event Action<Guid>? ClientConnected;
 
-    public TcpService(Func<DrawObjectService> getDrawObjectService, Func<SynchronizationService> getSynchronizationService, UserManagementService userManagementService, Func<PlayerMumbleService> playerMumbleService)
+    public TcpService(IUserManagementService userManagementService)
     {
         this.cancellationTokenSource = new CancellationTokenSource();
         this.server = new TcpServer();
         this.server.DataReceived += this.DataReceived;
         this.server.ClientConnected += id => this.ClientConnected?.Invoke(id);
 
-        this.messageTypes = new Dictionary<string, (Type, MessageHandler)>()
+        this.messageTypes = new Dictionary<string, (Type, IMessageHandler)>()
         {
-            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Line>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
-            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Line>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Line>(getDrawObjectService)) },
-            { typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.MapMarker>), new AddDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
-            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.MapMarker>(getDrawObjectService)) },
-            { typeof(AddDrawObjectMessage<Libs.Messages.Data.Image>).FullName, (typeof(AddDrawObjectMessage<Libs.Messages.Data.Image>), new AddDrawObjectMessageHandler<Libs.Messages.Data.Image>(getDrawObjectService)) },
-            { typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Image>).FullName, (typeof(RemoveDrawObjectMessage<Libs.Messages.Data.Image>), new RemoveDrawObjectMessageHandler<Libs.Messages.Data.Image>(getDrawObjectService)) },
-            { typeof(UpdateDrawObjectMessage<Libs.Messages.Data.Image>).FullName, (typeof(UpdateDrawObjectMessage<Libs.Messages.Data.Image>), new UpdateDrawObjectMessageHandler<Libs.Messages.Data.Image>(getDrawObjectService)) },
-            { typeof(PlayerMumbleMessage).FullName, (typeof(PlayerMumbleMessage), new PlayerMumbleMessageHandler(playerMumbleService, userManagementService)) },
-            { typeof(PingMessage).FullName, (typeof(PingMessage), new PingMessageHandler(this)) },
-            { typeof(LoginMessage).FullName, (typeof(LoginMessage), new LoginMessageHandler(userManagementService, this)) },
-            { typeof(StateChangedMessage<Libs.Messages.Data.DialogState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.DialogState>), new StateChangedMessageHandler<Libs.Messages.Data.DialogState>(getSynchronizationService)) },
-            { typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.LuaVariablesState>), new StateChangedMessageHandler<Libs.Messages.Data.LuaVariablesState>(getSynchronizationService)) },
-            { typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>).FullName, (typeof(StateChangedMessage<Libs.Messages.Data.AdventureState>), new StateChangedMessageHandler<Libs.Messages.Data.AdventureState>(getSynchronizationService)) },
-            { typeof(GetStatesMessage).FullName, (typeof(GetStatesMessage), new GetStatesMessageHandler(getSynchronizationService)) },
+            
         };
         this.userManagementService = userManagementService;
     }
 
-    public async Task Initialize()
-    {
-        _ = Task.Run(async () => await this.server.Run(this.cancellationTokenSource.Token), this.cancellationTokenSource.Token);
-    }
+    public async Task Initialize() 
+        => await this.server.Run(this.cancellationTokenSource.Token);
+
+    public void RegisterMessage(IMessageHandler handler) 
+        => this.messageTypes.Add(handler.MessageType.FullName!, (handler.MessageType, handler));
 
     public async Task SendMessage<T>(Guid clientId, T message, CancellationToken ct)
         => await this.SendMessage(clientId, this.CreateMessage(message), ct);

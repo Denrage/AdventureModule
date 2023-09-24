@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace Denrage.AdventureModule.Server.Services;
 
-public class UserManagementService
+public class UserManagementService : IUserManagementService
 {
     private readonly ConcurrentBag<Group> groups = new();
     private readonly ConcurrentDictionary<Guid, User> users = new();
 
-    public event Action<Guid> LoggedIn;
+    public event Action<Guid>? LoggedIn;
 
     public UserManagementService()
     {

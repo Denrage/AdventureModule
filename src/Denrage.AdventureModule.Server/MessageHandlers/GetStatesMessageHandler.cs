@@ -7,15 +7,15 @@ namespace Denrage.AdventureModule.Server.MessageHandlers;
 
 public class GetStatesMessageHandler : MessageHandler<GetStatesMessage>
 {
-    private readonly Func<SynchronizationService> getSynchronizationService;
+    private readonly ISynchronizationService synchronizationService;
 
-    public GetStatesMessageHandler(Func<SynchronizationService> getSynchronizationService)
+    public GetStatesMessageHandler(ISynchronizationService synchronizationService)
     {
-        this.getSynchronizationService = getSynchronizationService;
+        this.synchronizationService = synchronizationService;
     }
 
     protected override async Task Handle(Guid clientId, GetStatesMessage message, CancellationToken ct)
     {
-        await this.getSynchronizationService().GetStates(clientId, ct);
+        await this.synchronizationService.GetStates(clientId, ct);
     }
 }
