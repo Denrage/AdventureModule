@@ -7,6 +7,7 @@ using Blish_HUD.Settings;
 using Denrage.AdventureModule.Adventure;
 using Denrage.AdventureModule.Adventure.Elements;
 using Denrage.AdventureModule.Helper;
+using Denrage.AdventureModule.Interfaces;
 using Denrage.AdventureModule.Interfaces.Mumble;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
@@ -32,6 +33,7 @@ namespace Denrage.AdventureModule
         private readonly DrawObjectService drawObjectService;
         private readonly SynchronizationService synchronizationService;
         private readonly TcpService tcpService;
+        private readonly IInitializationService inializationService;
         private readonly PlayerMumbleService playerMumbleService;
         private readonly LoginService loginService;
         private readonly IGw2Mumble gw2Mumble;
@@ -53,9 +55,9 @@ namespace Denrage.AdventureModule
         {
             Instance = this;
             this.gw2Mumble = new Gw2MumbleWrapper();
-            //this.gw2Mumble = GameService.Gw2Mumble.IsAvailable ? new Gw2MumbleWrapper() : (IGw2Mumble)new MockMumble();
 
             this.tcpService = new TcpService(() => this.drawObjectService, () => this.synchronizationService, () => this.loginService, () => this.playerMumbleService);
+            this.inializationService = new InitializationService(this.tcpService);
             this.loginService = new LoginService(this.tcpService);
             this.playerMumbleService = new PlayerMumbleService(this.tcpService, this.loginService, this.gw2Mumble);
             this.drawObjectService = new DrawObjectService(this.tcpService);
@@ -72,10 +74,10 @@ namespace Denrage.AdventureModule
                     oldObject.TimeStamp = newObject.TimeStamp;
                 });
             
-            this.drawObjectService.Register<Libs.Messages.Data.MapMarker, AddDrawObjectMessage<Libs.Messages.Data.MapMarker>, RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>, UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>>(
-                marker => new AddDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() }, 
-                ids => new RemoveDrawObjectMessage<Libs.Messages.Data.MapMarker>() { Ids = ids.ToArray() }, 
-                marker => new UpdateDrawObjectMessage<Libs.Messages.Data.MapMarker>() { DrawObjects = marker.ToArray() },
+            this.drawObjectService.Register<MapMarker, AddDrawObjectMessage<MapMarker>, RemoveDrawObjectMessage<MapMarker>, UpdateDrawObjectMessage<MapMarker>>(
+                marker => new AddDrawObjectMessage<MapMarker>() { DrawObjects = marker.ToArray() }, 
+                ids => new RemoveDrawObjectMessage<MapMarker>() { Ids = ids.ToArray() }, 
+                marker => new UpdateDrawObjectMessage<MapMarker>() { DrawObjects = marker.ToArray() },
                 (oldObject, newObject) => oldObject.Position = newObject.Position);
 
             this.drawObjectService.Register<Libs.Messages.Data.Image, AddDrawObjectMessage<Libs.Messages.Data.Image>, RemoveDrawObjectMessage<Libs.Messages.Data.Image>, UpdateDrawObjectMessage<Libs.Messages.Data.Image>>(
@@ -185,7 +187,7 @@ namespace Denrage.AdventureModule
         {
             GameService.Graphics.World.AddEntity(new Entities.MarkerEntity(this.ContentsManager.GetTexture("marker.png"), this.gw2Mumble));
             this.tcpService.Connected += () => Logger.Info("Connected");
-            this.tcpService.ConnectionLossed += async () =>
+            this.tcpService.ConnectionLost += async () =>
             {
                 Logger.Info("Disconnected");
 
@@ -201,21 +203,13 @@ namespace Denrage.AdventureModule
                     }
                 }
             };
-            //await this.tcpService.Initialize();
-
-            //var window = new CanvasWindow()
-            //{
-            //    Parent = GraphicsService.Graphics.SpriteScreen,
-            //};
-            //window.Initialize(this.drawObjectService, this.loginService);
-            //window.Show();
 
             var markerContainer = new MapMarkerContainer(this.drawObjectService, this.gw2Mumble);
             var playerMarker = new PlayerMarkerControl(this.playerMumbleService, this.gw2Mumble);
             var dialog = new DialogBuilder(this.synchronizationService);
-            this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.tcpService, this.gw2Mumble);
+            this.adventureScript = new AdventureScript(dialog, this.synchronizationService, this.inializationService, this.tcpService, this.gw2Mumble);
 
-            var mainWindow = new MainWindow(this.tcpService, this.drawObjectService, this.loginService, this.adventureScript)
+            var mainWindow = new MainWindow(this.inializationService, this.tcpService, this.drawObjectService, this.loginService, this.adventureScript)
             {
                 Parent = GraphicsService.Graphics.SpriteScreen,
             };

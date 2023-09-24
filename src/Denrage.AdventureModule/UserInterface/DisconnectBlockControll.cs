@@ -1,5 +1,5 @@
 ﻿using Blish_HUD.Controls;
-using Denrage.AdventureModule.Services;
+using Denrage.AdventureModule.Interfaces;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,12 +13,12 @@ namespace Denrage.AdventureModule.UserInterface
     {
         private Label label;
 
-        public DisconnectBlockControl(TcpService tcpService)
+        public DisconnectBlockControl(IInitializationService initializationService)
         {
-            this.Visible = !tcpService.IsConnected;
+            this.Visible = !initializationService.IsInitialized;
 
-            tcpService.Connected += () => this.Visible = false;
-            tcpService.Disconnected += () => this.Visible = true;
+            initializationService.Initialize += () => this.Visible = false;
+            initializationService.Finalize += () => this.Visible = true;
 
             this.BackgroundColor = new Color(0, 0, 0, 100);
             this.ZIndex = int.MaxValue;

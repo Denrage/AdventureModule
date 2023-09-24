@@ -24,7 +24,7 @@ namespace Denrage.AdventureModule.Services
 
         public event Action Disconnected;
 
-        public event Action ConnectionLossed;
+        public event Action ConnectionLost;
 
         public event Action Connected;
 
@@ -119,7 +119,7 @@ namespace Denrage.AdventureModule.Services
                     this.client.Disconnect();
                     this.client.DataReceived -= this.Handle;
                     this.client = null;
-                    this.ConnectionLossed?.Invoke();
+                    this.ConnectionLost?.Invoke();
                     return;
                 }
             }

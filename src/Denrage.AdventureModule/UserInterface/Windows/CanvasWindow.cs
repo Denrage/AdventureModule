@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Denrage.AdventureModule.Helper;
+using Denrage.AdventureModule.Interfaces;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
@@ -34,19 +35,19 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 
         private Texture2D clipboardTexture;
 
-        public void Initialize(DrawObjectService drawObjectService, LoginService loginService, TcpService tcpService)
+        public void Initialize(DrawObjectService drawObjectService, LoginService loginService, IInitializationService initializationService)
         {
             this.drawObjectService = drawObjectService;
             this.loginService = loginService;
 
-            this.blockInputText = new DisconnectBlockControl(tcpService)
+            this.blockInputText = new DisconnectBlockControl(initializationService)
             {
                 Parent = this,
             };
 
-            tcpService.Connected += () => this.blockInput = false;
+            initializationService.Initialize += () => this.blockInput = false;
 
-            tcpService.Disconnected += () => this.blockInput = true;
+            initializationService.Finalize += () => this.blockInput = true;
 
             this.tools = new Tool[]
             {

@@ -233,7 +233,6 @@ namespace Denrage.AdventureModule.UserInterface.Windows.DrawTools
                     imageControl.Opacity = item.Opacity.Value;
                 }
 
-
                 var ownImages = images.Where(x => x.Username == this.loginService.Name).ToArray();
 
                 if (ownImages.Length > 0)

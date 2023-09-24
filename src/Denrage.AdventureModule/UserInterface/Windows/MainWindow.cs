@@ -1,6 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Controls;
 using Denrage.AdventureModule.Adventure;
+using Denrage.AdventureModule.Interfaces;
 using Denrage.AdventureModule.Services;
 using Microsoft.Xna.Framework;
 using System;
@@ -13,14 +14,11 @@ namespace Denrage.AdventureModule.UserInterface.Windows
 {
     public class MainWindow : WindowBase2
     {
-        private readonly TcpService tcpService;
-
-        public MainWindow(TcpService tcpService, DrawObjectService drawObjectService, LoginService loginService, AdventureScript adventureScript)
+        public MainWindow(IInitializationService initializationService, TcpService tcpService, DrawObjectService drawObjectService, LoginService loginService, AdventureScript adventureScript)
         {
             this.ConstructWindow(ContentService.Textures.TransparentPixel, new Rectangle(0, 0, 500, 500), new Rectangle(0, 40, 500, 500 - 40));
             this.Location = new Point(0, 100);
             this.CanResize = true;
-            this.tcpService = tcpService;
 
             var panel = new FlowPanel()
             {
@@ -56,20 +54,20 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             {
                 Parent = panel,
                 Text = "Connect",
-                Enabled = !this.tcpService.IsConnected,
+                Enabled = !initializationService.IsInitialized,
             };
 
             var disconnectButton = new StandardButton()
             {
                 Parent = panel,
                 Text = "Disconnect",
-                Enabled = this.tcpService.IsConnected,
+                Enabled = initializationService.IsInitialized,
             };
 
             var isConnectedLabel = new Label()
             {
                 Parent = panel,
-                Text = this.tcpService.IsConnected ? "Connected" : "Discsonnected",
+                Text = initializationService.IsInitialized ? "Connected" : "Discsonnected",
             };
 
             var canvasWindowButton = new StandardButton()
@@ -84,14 +82,14 @@ namespace Denrage.AdventureModule.UserInterface.Windows
                 Text = "Adventure",
             };
 
-            this.tcpService.Connected += () =>
+            initializationService.Initialize += () =>
             {
                 isConnectedLabel.Text = "Connected";
                 connectButton.Enabled = false;
                 disconnectButton.Enabled = true;
             };
 
-            this.tcpService.Disconnected += () =>
+            initializationService.Finalize += () =>
             {
                 isConnectedLabel.Text = "Disconnected";
                 connectButton.Enabled = true;
@@ -99,16 +97,16 @@ namespace Denrage.AdventureModule.UserInterface.Windows
             };
 
             connectButton.Click += async (s, e) 
-                => await this.tcpService.Initialize();
+                => await tcpService.Initialize();
 
             disconnectButton.Click += (s, e)
-                => this.tcpService.Disconnect();
+                => tcpService.Disconnect();
 
             var canvasWindow = new CanvasWindow()
             {
                 Parent = GameService.Graphics.SpriteScreen,
             };
-            canvasWindow.Initialize(drawObjectService, loginService, tcpService);
+            canvasWindow.Initialize(drawObjectService, loginService, initializationService);
 
             canvasWindowButton.Click += (s, e)
                 => canvasWindow.Show();

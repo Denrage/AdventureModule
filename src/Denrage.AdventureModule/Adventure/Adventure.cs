@@ -1,5 +1,6 @@
 ﻿using Denrage.AdventureModule.Adventure.Elements;
 using Denrage.AdventureModule.Adventure.Services;
+using Denrage.AdventureModule.Interfaces;
 using Denrage.AdventureModule.Libs.Messages;
 using Denrage.AdventureModule.Libs.Messages.Data;
 using Denrage.AdventureModule.Services;
@@ -36,7 +37,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public IReadOnlyDictionary<string, Step> Steps => new ReadOnlyDictionary<string, Step>(this.steps);
 
-        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator creator, LuaLogger logger, LogicBuilderCreator logicCreator, DialogBuilder dialog, SynchronizationService synchronizationService, TcpService tcpService)
+        public Adventure(Lua engine, string scriptFolder, CharacterInformation characterInformation, AdventureElementCreator creator, LuaLogger logger, LogicBuilderCreator logicCreator, DialogBuilder dialog, SynchronizationService synchronizationService, IInitializationService initializationService, TcpService tcpService)
         {
             this.synchronizationService = synchronizationService;
             this.adventureElementCreator = creator;
@@ -66,7 +67,7 @@ namespace Denrage.AdventureModule.Adventure
                 }
             });
 
-            tcpService.Disconnected += () =>
+            initializationService.Finalize += () =>
             {
                 var previousStep = this.Steps.Values.FirstOrDefault(x => x.State == StepState.Running);
                 if (previousStep != null)
@@ -77,12 +78,12 @@ namespace Denrage.AdventureModule.Adventure
 
             this.LoadSteps(scriptFolder);
 
-            if (tcpService.IsConnected)
+            if (initializationService.IsInitialized)
             {
                 tcpService.Send(new GetStatesMessage(), default);
             }
 
-            tcpService.Connected += () =>
+            initializationService.Initialize += () =>
                 tcpService.Send(new GetStatesMessage(), default);
         }
 
