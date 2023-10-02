@@ -1,18 +1,4 @@
-<mat-toolbar>
-  <span>Adventure Module Admin Panel</span>
-</mat-toolbar>
-<mat-sidenav-container>
-  <mat-sidenav #sidenav mode="side" opened class="example-sidenav"
-                 [fixedInViewport]="true" [fixedTopGap]="64">
-    <mat-nav-list>
-      <a mat-list-item routerLinkActive="active" routerLink="/dashboard">Dashboard</a>
-      <a mat-list-item routerLinkActive="active" routerLink="/adventures">Adventures</a>
-      <a mat-list-item routerLinkActive="active" routerLink="/players">Players</a>
-      <a mat-list-item routerLinkActive="active" routerLink="/templates">Templates</a>
-    </mat-nav-list>
-  </mat-sidenav>
-  <mat-sidenav-content style="height:calc(100vh - 64px);">
+<div class="sitecontainer">
+    <app-navigation class="sidenav"></app-navigation>
     <router-outlet></router-outlet>
-  </mat-sidenav-content>
-</mat-sidenav-container>
-
+</div>

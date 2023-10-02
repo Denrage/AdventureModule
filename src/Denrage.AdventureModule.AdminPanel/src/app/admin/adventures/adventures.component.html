@@ -1,0 +1,10 @@
+<div class="topbar">
+    <button pButton pRipple label="Add" icon="pi pi-plus" class="bg-green-400"></button>
+</div>
+<div class="adventure-list">
+    <p-card *ngFor="let item of items" header="{{item.name}}">
+        <ng-template pTemplate="header">
+            <img class="shadow-4" alt="profilePicture" src="{{item.picture}}"/>
+        </ng-template>
+    </p-card>
+</div>

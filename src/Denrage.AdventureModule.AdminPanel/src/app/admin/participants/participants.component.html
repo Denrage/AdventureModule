@@ -1,0 +1,7 @@
+<div class="participants-list">
+    <p-card *ngFor="let item of items" header="{{item.username}}" subheader="{{item.discord}}">
+        <ng-template pTemplate="header">
+            <img alt="profilePicture" src="{{item.profilePicture}}"/>
+        </ng-template>
+    </p-card>
+</div>

@@ -1,0 +1,16 @@
+.participants-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    p-card {
+        margin: 1em;
+
+        img {
+            margin: 1em;
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+        }
+    }
+}

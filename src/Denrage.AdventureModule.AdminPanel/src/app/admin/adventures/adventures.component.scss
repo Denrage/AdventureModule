@@ -1,0 +1,14 @@
+.adventure-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    p-card {
+        margin: 1em;
+
+        img {
+            width: 200px;
+            height: 100px;
+        }
+    }
+}
