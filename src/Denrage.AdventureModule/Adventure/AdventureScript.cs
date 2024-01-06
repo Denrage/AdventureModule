@@ -55,7 +55,7 @@ namespace Denrage.AdventureModule.Adventure
 
         public void Initialize()
         {
-            var adventure = new Adventure(this.luaEngine, @"D:\Repos\AdventureModule\Adventure2", this.characterInformation, this.creator, this.logger, this.logicCreator, this.dialogBuilder, this.synchronizationService, this.initializationService, this.tcpService);
+            var adventure = new Adventure(this.luaEngine, @"F:\Repos\AdventureModule\Adventure2", this.characterInformation, this.creator, this.logger, this.logicCreator, this.dialogBuilder, this.synchronizationService, this.initializationService, this.tcpService);
             var scriptWindow = new StepOverviewWindow(adventure, this.initializationService);
             scriptWindow.Show();
         }

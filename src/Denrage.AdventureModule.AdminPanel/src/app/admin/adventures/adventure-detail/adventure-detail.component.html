@@ -1,1 +1,30 @@
-<p>adventure-detail works!</p>
+<img src="https://picsum.photos/200/100" />
+<div class="grid">
+    <p-card class="col" header="Adventure"></p-card>
+    <p-card class="col" header="Steps">
+        <p-dataView [value]="steps">
+            <ng-template let-step pTemplate="listItem">
+               <div class="col-12"> <span>{{ step[0] }} {{step[1]}}</span></div>
+            </ng-template>
+        </p-dataView>
+    </p-card>
+</div>
+<div class="grid">
+    <p-card class="col-3" header="Participants">
+        <p-tree [value]="groups"></p-tree>
+        <!-- <ul>
+            <li *ngFor="let group of this.adventureService.getAdventures()[0].groups">
+                {{group.name}}
+                <ul>
+                    <li *ngFor="let player of group.users">
+                        {{player.ingameUser.accountName}}
+                    </li>
+                </ul>
+            </li>
+        </ul> -->
+    </p-card>
+    <p-card class="col-9" header="Map">
+        <div class="map-container" leaflet [leafletOptions]="options" (leafletMapReady)="onMapReady($event)">
+        </div>
+    </p-card>
+</div>
